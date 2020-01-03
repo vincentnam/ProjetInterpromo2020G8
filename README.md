@@ -12,7 +12,7 @@ Il y aura pour chaque groupe un responsable de M2 référent à qui vous pourrez
 - Groupe traitement de l'information : ![#c5f015](https://placehold.it/15/c5f015/000000?text=+) Vincent-Nam DANG
 
 
-- Groupe post-processing :  ![#1589F0](https://placehold.it/15/1589F0/000000?text=+) Charlotte MARQUES 
+- Groupe post-processing :  ![#1589F0](https://placehold.it/15/1589F0/000000?text=+) Charlotte MARQUE
 
 # Organisation : 
 Chaque personne possèdera son propre fichier pour travailler. Il ne faut modifier QUE son propre fichier. 

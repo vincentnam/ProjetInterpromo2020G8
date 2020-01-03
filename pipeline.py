@@ -14,7 +14,8 @@ import numpy as np
 #  - Mettre à jour le pipeline pour prendre en compte des resultats
 #    auxiliaires nécessaire pour le traitement suivant
 #  - Gestion des hints plus formellement
-#  ...
+#  - Gestion de l'héritage des docstrings
+#  -
 
 
 # Metaclasse pour les processus
@@ -25,6 +26,14 @@ class MetaProcess(metaclass=ABCMeta):
     pipeline de travail (classe Pipeline).
     """
     def check_attributes(self):
+        """
+        Attribut abstrait obligatoire permettant de définir une
+        description du process effectué affiché si la verbosité est
+        supérieure à 0.
+        Cet attribut doit décrire ce qui est réalisée par le process
+        et la librairie majoritairement utilisée pour réaliser ce
+        process ainsi que la version de cette bibliothèque s'il y a.
+        """
         if self.process_desc is None or self.process_desc is "":
             raise NotImplementedError("Définissez une description pour "
                                       + "le process.")
@@ -127,7 +136,7 @@ class Postprocess(MetaProcess):
 
 
 # Classe pour le pipeline
-class Pipeline():
+class Pipeline:
     """
     Classe permettant de définir un pipeline. Le pipeline execute dans
     l'ordre le pré_processing, le processing et le post_processing.
@@ -136,18 +145,30 @@ class Pipeline():
     fonction add_pre_process
     """
     def __init__(self) -> None:
-        self.pre_processing: Iterable[Preprocess] = np.array([])
-        self.processing: Iterable[Process] = np.array([])
-        self.post_processing: Iterable[Postprocess] = np.array([])
+        self.pre_process: Iterable[Preprocess] = np.array([])
+        self.process: Iterable[Process] = np.array([])
+        self.post_process: Iterable[Postprocess] = np.array([])
 
-    def add_pre_process(self, in_pre_process: Iterable[Preprocess]) -> None:
-        self.pre_processing = np.append(self.pre_processing, in_pre_process)
+    def add_processes(self, in_process: Iterable[MetaProcess]):
+        for process in in_process:
+            if isinstance(process, Preprocess):
+                self.pre_process = np.append(self.pre_process,
+                                             np.array([process]))
+            if isinstance(process, Process):
+                self.process = np.append(self.process,
+                                             np.array([process]))
+            if isinstance(process, Postprocess):
+                self.post_process = np.append(self.post_process,
+                                             np.array([process]))
 
-    def add_process(self, in_process: Iterable[Process]) -> None:
-        self.processing = np.append(self.processing, in_process)
+    def print_process(self):
+        for process in self.pre_process:
+            print(process.process_desc)
+        for process in self.process:
+            print(process.process_desc)
+        for process in self.post_process:
+            print(process.process_desc)
 
-    def add_post_process(self, in_post_process: Iterable[Postprocess]) -> None:
-        self.post_processing = np.append(self.post_processing, in_post_process)
 
     # Pas besoin de retourner les variables : on modifie directement les images
     def run_pipeline(self, images: Iterable[Iterable]) -> None:
@@ -164,7 +185,7 @@ class Pipeline():
         :return: None
         """
         print("Début du pipeline : ")
-        for num, pre_process in enumerate(self.pre_processing):
+        for num, pre_process in enumerate(self.pre_process):
             try:
                 print("Doing : " + pre_process.process_desc)
                 pre_process.run(images)
@@ -173,7 +194,7 @@ class Pipeline():
                       + "( " + pre_process.process_desc + " ) a levé une erreur.")
                 print(e)
 
-        for num, process in enumerate(self.processing):
+        for num, process in enumerate(self.process):
             try:
                 print("Doing : " + process.process_desc)
                 process.run(images)
@@ -182,7 +203,7 @@ class Pipeline():
                       + "( " + process.process_desc + " ) a levé une erreur.")
                 print(e)
 
-        for num, post_process in enumerate(self.post_processing):
+        for num, post_process in enumerate(self.post_process):
             try :
 
                 print("Doing : " + post_process.process_desc)
@@ -238,9 +259,9 @@ if __name__== '__name__':
 
 
     pipeline = Pipeline()
-    pipeline.add_pre_process([Augmentation()])
-    pipeline.add_process([PyTesseract()])
-    pipeline.add_post_process([Alignement()])
+    pipeline.add_processes([Augmentation()])
+    pipeline.add_processes([PyTesseract()])
+    pipeline.add_processes([Alignement()])
 
     pipeline.run_pipeline([])
     print(Augmentation.run.__doc__)
