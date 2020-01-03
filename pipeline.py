@@ -1,3 +1,9 @@
+"""
+Created on Fri Jan 3 13:28:13 CET 2019
+Group 8
+@authors: DANG Vincent-Nam
+"""
+
 from abc import ABCMeta, abstractmethod
 from typing import Iterable
 import numpy as np
@@ -207,27 +213,30 @@ class Pipeline():
             post_process.run(images)
 '''
 
-
-class Augmentation(Preprocess):
-    process_desc = "OpenCV4.0 -> data augmentation"
-
-    def run(self, images):
-        print("Pre_processing...")
-
-class PyTesseract(Process):
-    process_desc = "PyTesseract3.8.0 -> recherche caractères"
-    def run(self, images):
-        print("Processing...")
-
-
-class Alignement(Postprocess):
-    process_desc = "Pandas -> alignement predictions"
-    def run(self, images):
-        print("Post_processing...")
-
-
+# Exemple of usage of the pipeline.
 
 if __name__== '__name__':
+    class Augmentation(Preprocess):
+        process_desc = "OpenCV4.0 -> data augmentation"
+
+        def run(self, images):
+            print("Pre_processing...")
+
+
+    class PyTesseract(Process):
+        process_desc = "PyTesseract3.8.0 -> recherche caractères"
+
+        def run(self, images):
+            print("Processing...")
+
+
+    class Alignement(Postprocess):
+        process_desc = "Pandas -> alignement predictions"
+
+        def run(self, images):
+            print("Post_processing...")
+
+
     pipeline = Pipeline()
     pipeline.add_pre_process([Augmentation()])
     pipeline.add_process([PyTesseract()])
