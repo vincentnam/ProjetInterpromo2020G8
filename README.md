@@ -31,12 +31,16 @@ Il y aura pour chaque groupe un responsable de M2 référent à qui vous pourrez
 
 
 - Groupe pré-processing : ![#f03c15](https://placehold.it/15/f03c15/000000?text=+) William AZZOUZA
-
-
+    -  Chloé GAUSSAIL
+    -  Sonia BEZOMBES
+    -  . 
 - Groupe traitement de l'information : ![#c5f015](https://placehold.it/15/c5f015/000000?text=+) Vincent-Nam DANG
-
+    - Célya MARCELO
+    - Théo VEDIS
 
 - Groupe post-processing :  ![#1589F0](https://placehold.it/15/1589F0/000000?text=+) Charlotte MARQUE
+    -  .
+    -  .
 
 # Organisation : 
 Chaque personne possèdera son propre fichier pour travailler. Il ne faut modifier QUE son propre fichier. 
