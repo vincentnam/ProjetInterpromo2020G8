@@ -11,12 +11,13 @@ import numpy as np
 
 
 # TODO :
+#  - Tests unitaires et tests intégrations : test pipeline
+#  (run_pipeline), levées d'erreur, etc...
 #  - Traduire les commentaires en anglais (si besoin ?)
 #  - Mettre à jour le pipeline pour prendre en compte des resultats
 #    auxiliaires nécessaire pour le traitement suivant
 #  - Gestion des hints plus formellement
 #  - Gestion de l'héritage des docstrings
-#  -
 
 
 class NotProcessClass(Exception):
