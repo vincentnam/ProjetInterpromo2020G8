@@ -6,6 +6,7 @@ Group 8
 
 from abc import ABCMeta, abstractmethod
 from typing import Iterable
+
 import numpy as np
 
 
@@ -18,6 +19,19 @@ import numpy as np
 #  -
 
 
+class NotProcessClass(Exception):
+    def __init__(self, expression, message):
+        """
+        Classe d'exception pour indiquer qu'autre chose qu'un process a
+        été rajouté dans le pipeline.
+        Attributes:
+            process_desc -- description du process
+            process_class -- class du process
+        """
+        self.expression = expression
+        self.message = message
+
+
 # Metaclasse pour les processus
 class MetaProcess(metaclass=ABCMeta):
     """
@@ -25,6 +39,7 @@ class MetaProcess(metaclass=ABCMeta):
     comportement que doit avoir un processus pour fonctionner avec les
     pipeline de travail (classe Pipeline).
     """
+
     def check_attributes(self):
         """
         Attribut abstrait obligatoire permettant de définir une
@@ -34,15 +49,15 @@ class MetaProcess(metaclass=ABCMeta):
         et la librairie majoritairement utilisée pour réaliser ce
         process ainsi que la version de cette bibliothèque s'il y a.
         """
-        if self.process_desc is None or self.process_desc is "":
+        if self.process_desc is None or self.process_desc == "":
             raise NotImplementedError("Définissez une description pour "
                                       + "le process.")
 
-    def __init__(self,verbose=1):
+    def __init__(self, verbose=1):
         self.verbose = verbose
         self.check_attributes()
         super().__init__()
-        if self.verbose > 0 :
+        if self.verbose > 0:
             print(self.__class__.__base__.__name__ + " : ", end=' ')
             print(self.process_desc)
 
@@ -127,11 +142,11 @@ class Postprocess(MetaProcess):
     """
     process_desc = None
 
-    def __init__(self, *args,**kwargs):
-        super().__init__(*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @abstractmethod
-    def run(self, images : Iterable[Iterable]) -> None:
+    def run(self, images: Iterable[Iterable]) -> None:
         pass
 
 
@@ -144,31 +159,62 @@ class Pipeline:
     traitements pour chaque étapes à réaliser. Il faut utiliser les
     fonction add_pre_process
     """
+
     def __init__(self) -> None:
         self.pre_process: Iterable[Preprocess] = np.array([])
         self.process: Iterable[Process] = np.array([])
         self.post_process: Iterable[Postprocess] = np.array([])
 
     def add_processes(self, in_process: Iterable[MetaProcess]):
+        """
+        Ajoute une liste de process dans le pipeline.
+        :param in_process: Iterable[MetaProcess] : Liste des process à
+        ajouter au pipeline. Chaque
+        """
+        wrong_processes: tuple = ()
         for process in in_process:
-            if isinstance(process, Preprocess):
-                self.pre_process = np.append(self.pre_process,
+            if not (isinstance(process, Postprocess)
+                    or isinstance(process, Process)
+                    or isinstance(process, Preprocess)):
+                if MetaProcess in process.__class__.__mro__:
+                    wrong_process = ((process.process_desc,
+                                      process.__class__,),)
+
+                    wrong_processes = wrong_processes + wrong_process
+
+                else:
+                    wrong_processes = wrong_processes + ((type(process),),)
+                    continue
+
+            else:
+                if isinstance(process, Preprocess):
+                    self.pre_process = np.append(self.pre_process,
+                                                 np.array([process]))
+                    print(process.process_desc + " a été ajouté.")
+                if isinstance(process, Process):
+                    self.process = np.append(self.process,
                                              np.array([process]))
-            if isinstance(process, Process):
-                self.process = np.append(self.process,
-                                             np.array([process]))
-            if isinstance(process, Postprocess):
-                self.post_process = np.append(self.post_process,
-                                             np.array([process]))
+                    print(process.process_desc + " a été ajouté.")
+
+                if isinstance(process, Postprocess):
+                    self.post_process = np.append(self.post_process,
+                                                  np.array([process]))
+                    print(process.process_desc + " a été ajouté.")
+        if len(wrong_processes) > 0:
+            raise NotProcessClass("Autre chose que des process ont "
+                                  "été ajoutés au pipeline.", wrong_processes)
 
     def print_process(self):
+        """
+        Affiche les processus qui seront executés permettant ainsi de
+        voir l'ordre d'execution des traitements dans le pipeline.
+        """
         for process in self.pre_process:
             print(process.process_desc)
         for process in self.process:
             print(process.process_desc)
         for process in self.post_process:
             print(process.process_desc)
-
 
     # Pas besoin de retourner les variables : on modifie directement les images
     def run_pipeline(self, images: Iterable[Iterable]) -> None:
@@ -189,9 +235,10 @@ class Pipeline:
             try:
                 print("Doing : " + pre_process.process_desc)
                 pre_process.run(images)
-            except Exception as e :
+            except Exception as e:
                 print("Le pré-processing numéro " + str(num)
-                      + "( " + pre_process.process_desc + " ) a levé une erreur.")
+                      + "( " + pre_process.process_desc
+                      + " ) a levé une erreur.")
                 print(e)
 
         for num, process in enumerate(self.process):
@@ -204,7 +251,7 @@ class Pipeline:
                 print(e)
 
         for num, post_process in enumerate(self.post_process):
-            try :
+            try:
 
                 print("Doing : " + post_process.process_desc)
                 post_process.run(images)
@@ -234,9 +281,8 @@ class Pipeline:
             post_process.run(images)
 '''
 
-# Exemple of usage of the pipeline.
-
-if __name__== '__name__':
+# Exemple d'utilisation du pipeline.
+if __name__ == "__main__":
     class Augmentation(Preprocess):
         process_desc = "OpenCV4.0 -> data augmentation"
 
@@ -258,8 +304,20 @@ if __name__== '__name__':
             print("Post_processing...")
 
 
+    class Wrong_Process(MetaProcess):
+        pass
+
+
+    class Coucou_process(Wrong_Process):
+        process_desc = "Errortest"
+
+        def run(self, images):
+            print("Error")
+
+
     pipeline = Pipeline()
-    pipeline.add_processes([Augmentation()])
+
+    pipeline.add_processes([Augmentation(), "", Coucou_process()])
     pipeline.add_processes([PyTesseract()])
     pipeline.add_processes([Alignement()])
 
