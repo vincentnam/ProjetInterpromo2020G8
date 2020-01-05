@@ -1,5 +1,30 @@
 # ProjetInterpromo2020G8
 Groupe 8 private repository : prediction cabines
+#
+
+### ![#fffb00](https://placehold.it/15/fffb00/000000?text=+) TODO : 
+#### - Pré-traitement des données :
+
+- [ ]  Explorations des données
+- [ ]  Recherche d'éventuelles tendances pour simplifier les traitements
+- [ ]  Traitement des images pour faire ressortir les informations voulues 
+- [ ]  
+#### - Traitement de la donnée :
+- [ ]  Localisation des sièges
+- [ ]  Localisation des autres éléments constituants des plans 
+- [ ]  Distance des sièges par rapport aux autres éléments
+
+#### - Post-traitement des informations : 
+- [ ]  Valorisation des résultats
+- [ ]  Correction des prédictions 
+- [ ]  Mise en forme des résultats 
+
+
+###### Si du temps est disponible : 
+- [ ]   Réseaux de neuronnes pour détections des éléments pour s'adapter à tout type de plans
+- [ ]   Heatmap 
+- [ ]  Mise en place d'une solution de visualisation dynamique 
+- [ ]  ... ?
 
 
 # Responsable de groupe : 
