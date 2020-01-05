@@ -7,8 +7,7 @@ Groupe 8 private repository : prediction cabines
 
 - [ ]  Explorations des données
 - [ ]  Recherche d'éventuelles tendances pour simplifier les traitements
-- [ ]  Traitement des images pour faire ressortir les informations voulues 
-- [ ]  
+- [ ]  Traitement des images pour faire ressortir les informations voulues  
 #### - Traitement de la donnée :
 - [ ]  Localisation des sièges
 - [ ]  Localisation des autres éléments constituants des plans 
