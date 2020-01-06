@@ -2,24 +2,41 @@
 Groupe 8 private repository : prediction cabines
 
 Lien du document drive décrivant un peu le projet : https://docs.google.com/document/d/1bfkXWvkYrwYwVtkSgcScX5hb6XGzKLVn_2sqA2HXyDo/edit?usp=sharing
-#
+# Légende des plans : 
+##Légende SeatGuru
+![alt text](./images/image2.png)
+
+##Légende SeatMaestro
+![alt text](./images/image3.png)
 
 ### ![#fffb00](https://placehold.it/15/fffb00/000000?text=+) TODO : 
 #### - Pré-traitement des données :
 
-- [ ]  Explorations des données
+- [x]  Explorations des données
+    - [ ] Récupération des éléments constituants des plans 
 - [ ]  Recherche d'éventuelles tendances pour simplifier les traitements
+    - [ ] Stat descriptives tailles images
 - [ ]  Traitement des images pour faire ressortir les informations voulues  
+    - [ ] Normalisation des images pour les mettre à la même échelle
+    - [ ] Transformation couleurs 
 #### - Traitement de la donnée :
+- [ ]  Formalisation des modèles de données 
+    - [ ] Sortie de process
+    - [ ] Sortie de post process 
 - [ ]  Localisation des sièges
-- [ ]  Localisation des autres éléments constituants des plans 
-- [ ]  Distance des sièges par rapport aux autres éléments
+    - [ ] Pattern matching pour les sièges de SeatGuru
+    - [ ] Pattern matching pour les sièges de SeatMaestro
+- [ ]  Localisation des autres éléments constituants des plans
+    - [ ] Pattern matching pour les éléments de SeatGuru
+    - [ ] Pattern matching pour les éléments de SeatMaestro
 - [ ]  Validation des résultats 
 
 #### - Post-traitement des informations : 
 - [ ]  Valorisation des résultats
 - [ ]  Correction des prédictions 
-- [ ]  Mise en forme des résultats 
+- [ ]  Mise en forme des résultats  
+- [ ]  Distance des sièges par rapport aux autres éléments
+    - [ ] Transformation des plans sous forme de grille 
 
  
 ###### Si du temps est disponible : 
@@ -36,14 +53,14 @@ Il y aura pour chaque groupe un responsable de M2 référent à qui vous pourrez
 - Groupe pré-processing : ![#f03c15](https://placehold.it/15/f03c15/000000?text=+) William AZZOUZA
     -  Chloé GAUSSAIL
     -  Sonia BEZOMBES
-    -  . 
+    -  Sofiane BENHAMOUCHE
 - Groupe traitement de l'information : ![#c5f015](https://placehold.it/15/c5f015/000000?text=+) Vincent-Nam DANG
     - Célya MARCELO
     - Théo VEDIS
 
 - Groupe post-processing :  ![#1589F0](https://placehold.it/15/1589F0/000000?text=+) Charlotte MARQUE
-    -  .
-    -  .
+    -  Hassan
+    -  
 
 # Organisation : 
 Chaque personne possèdera son propre fichier pour travailler. Il ne faut modifier QUE son propre fichier. 
