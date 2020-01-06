@@ -1,5 +1,7 @@
 # ProjetInterpromo2020G8
 Groupe 8 private repository : prediction cabines
+
+Lien du document drive décrivant un peu le projet : https://docs.google.com/document/d/1bfkXWvkYrwYwVtkSgcScX5hb6XGzKLVn_2sqA2HXyDo/edit?usp=sharing
 #
 
 ### ![#fffb00](https://placehold.it/15/fffb00/000000?text=+) TODO : 
@@ -12,13 +14,14 @@ Groupe 8 private repository : prediction cabines
 - [ ]  Localisation des sièges
 - [ ]  Localisation des autres éléments constituants des plans 
 - [ ]  Distance des sièges par rapport aux autres éléments
+- [ ]  Validation des résultats 
 
 #### - Post-traitement des informations : 
 - [ ]  Valorisation des résultats
 - [ ]  Correction des prédictions 
 - [ ]  Mise en forme des résultats 
 
-
+ 
 ###### Si du temps est disponible : 
 - [ ]   Réseaux de neuronnes pour détections des éléments pour s'adapter à tout type de plans
 - [ ]   Heatmap 
