@@ -282,6 +282,9 @@ class Pipeline:
             post_process.run(images)
 '''
 
+
+''' 
+
 # Exemple d'utilisation du pipeline.
 if __name__ == "__main__":
     class Augmentation(Preprocess):
@@ -324,3 +327,4 @@ if __name__ == "__main__":
 
     pipeline.run_pipeline([])
     print(Augmentation.run.__doc__)
+'''
