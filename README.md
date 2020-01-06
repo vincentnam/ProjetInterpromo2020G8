@@ -3,10 +3,10 @@ Groupe 8 private repository : prediction cabines
 
 Lien du document drive décrivant un peu le projet : https://docs.google.com/document/d/1bfkXWvkYrwYwVtkSgcScX5hb6XGzKLVn_2sqA2HXyDo/edit?usp=sharing
 # Légende des plans : 
-##Légende SeatGuru
+## Légende SeatGuru
 ![alt text](./images/image2.png)
 
-##Légende SeatMaestro
+## Légende SeatMaestro
 ![alt text](./images/image3.png)
 
 ### ![#fffb00](https://placehold.it/15/fffb00/000000?text=+) TODO : 
