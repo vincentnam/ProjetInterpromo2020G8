@@ -12,13 +12,14 @@ Groupe 8 private repository : prediction cabines
 - [ ]  Localisation des sièges
 - [ ]  Localisation des autres éléments constituants des plans 
 - [ ]  Distance des sièges par rapport aux autres éléments
+- [ ]  Validation des résultats 
 
 #### - Post-traitement des informations : 
 - [ ]  Valorisation des résultats
 - [ ]  Correction des prédictions 
 - [ ]  Mise en forme des résultats 
 
-
+ 
 ###### Si du temps est disponible : 
 - [ ]   Réseaux de neuronnes pour détections des éléments pour s'adapter à tout type de plans
 - [ ]   Heatmap 
