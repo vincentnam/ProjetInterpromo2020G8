@@ -59,8 +59,8 @@ Il y aura pour chaque groupe un responsable de M2 référent à qui vous pourrez
     - Théo VEDIS
 
 - Groupe post-processing :  ![#1589F0](https://placehold.it/15/1589F0/000000?text=+) Charlotte MARQUE
-    -  Hassan
-    -  
+    -  Hassan HADDA 
+    -  Jason DAURAT
 
 # Organisation : 
 Chaque personne possèdera son propre fichier pour travailler. Il ne faut modifier QUE son propre fichier. 
