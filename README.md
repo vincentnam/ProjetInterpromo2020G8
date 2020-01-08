@@ -4,7 +4,7 @@ Groupe 8 private repository : prediction cabines
 Lien du document drive décrivant un peu le projet : https://docs.google.com/document/d/1bfkXWvkYrwYwVtkSgcScX5hb6XGzKLVn_2sqA2HXyDo/edit?usp=sharing
 # Légende des plans : 
 ## Légende SeatGuru
-![alt text](./images/image2.png)
+![alt text](./images/Legende .png)
 
 ## Légende SeatMaestro
 ![alt text](./images/image3.png)
