@@ -121,6 +121,7 @@ class Process(MetaProcess):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.json: dict = {}
 
     @abstractmethod
     def run(self, images: Iterable[Iterable]) -> None:
