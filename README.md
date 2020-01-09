@@ -13,27 +13,29 @@ Lien du document drive décrivant un peu le projet : https://docs.google.com/doc
 #### - Pré-traitement des données :
 
 - [x]  Explorations des données
-    - [ ] Récupération des éléments constituants des plans 
-- [ ]  Recherche d'éventuelles tendances pour simplifier les traitements
-    - [ ] Stat descriptives tailles images
-- [ ]  Traitement des images pour faire ressortir les informations voulues  
+    - [x] Récupération des éléments constituants des plans 
+- [x]  Recherche d'éventuelles tendances pour simplifier les traitements
+    - [x] Stat descriptives tailles images
+- [x]  Traitement des images pour faire ressortir les informations voulues  
     - [ ] Normalisation des images pour les mettre à la même échelle
-    - [ ] Transformation couleurs 
+    - [x] Transformation couleurs 
 #### - Traitement de la donnée :
 - [ ]  Formalisation des modèles de données 
     - [ ] Sortie de process
     - [ ] Sortie de post process 
-- [ ]  Localisation des sièges
-    - [ ] Pattern matching pour les sièges de SeatGuru
+- [x]  Localisation des sièges
+    - [x] Pattern matching pour les sièges de SeatGuru
     - [ ] Pattern matching pour les sièges de SeatMaestro
-- [ ]  Localisation des autres éléments constituants des plans
-    - [ ] Pattern matching pour les éléments de SeatGuru
+- [x]  Localisation des autres éléments constituants des plans
+    - [x] Pattern matching (NON) -> Segmentation pour les éléments de SeatGuru
     - [ ] Pattern matching pour les éléments de SeatMaestro
 - [ ]  Validation des résultats 
 
 #### - Post-traitement des informations : 
 - [ ]  Valorisation des résultats
-- [ ]  Correction des prédictions 
+- [x]  Correction des prédictions 
+    - [x] Alignement 
+    - [ ] Clustering
 - [ ]  Mise en forme des résultats  
 - [ ]  Distance des sièges par rapport aux autres éléments
     - [ ] Transformation des plans sous forme de grille 
@@ -41,7 +43,7 @@ Lien du document drive décrivant un peu le projet : https://docs.google.com/doc
  
 ###### Si du temps est disponible : 
 - [ ]   Réseaux de neuronnes pour détections des éléments pour s'adapter à tout type de plans
-- [ ]   Heatmap 
+- [x]   Heatmap -> Donné au groupe Dashboard
 - [ ]  Mise en place d'une solution de visualisation dynamique 
 - [ ]  ... ?
 
