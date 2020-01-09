@@ -1,6 +1,13 @@
 # ProjetInterpromo2020G8
 Groupe 8 private repository : prediction cabines
 
+
+Documentaiton Deep Learning : https://docs.google.com/document/d/1Pht0gxAkobEJzD24B42Fu_TzKjeq6rgOsKi-l9-fEvM/edit?usp=sharing
+
+
+# ATTENTION : 
+## Chacun doit maintenant travailler sur sa propre branche. Pour se faire, il faut changer de branche et passer sur la branche qui correspond. Les branches sont nommés par prénom (ex : branche "Vincent-Nam"). Pour changer de branche il faut utiliser la commande "git checkout" suivi du nom de la branche (ex : git checkout Vincent-Nam)
+##Pour visualiser la liste des branches : git branch -v 
 Lien du document drive décrivant un peu le projet : https://docs.google.com/document/d/1bfkXWvkYrwYwVtkSgcScX5hb6XGzKLVn_2sqA2HXyDo/edit?usp=sharing
 # Légende des plans : 
 ## Légende SeatGuru
