@@ -6,9 +6,48 @@ Group 8
 
 from abc import ABCMeta, abstractmethod
 from typing import Iterable
-
 import numpy as np
+import inspect
+import re
 
+
+def overrides(method):
+    # actually can't do this because a method is really
+    # just a function while inside a class def'n
+    # assert(inspect.ismethod(method))
+
+    stack = inspect.stack()
+    base_classes = re.search(r'class.+\((.+)\)\s*', stack[2][4][0]).group(1)
+
+    # handle multiple inheritance
+    base_classes = [s.strip() for s in base_classes.split(',')]
+    if not base_classes:
+        raise ValueError('overrides decorator: unable to determine base class')
+
+    # stack[0]=overrides, stack[1]=inside \
+    # class def'n, stack[2]=outside class def'n
+    derived_class_locals = stack[2][0].f_locals
+
+    # replace each class name in base_classes with the actual class type
+    for i, base_class in enumerate(base_classes):
+
+        if '.' not in base_class:
+            base_classes[i] = derived_class_locals[base_class]
+
+        else:
+            components = base_class.split('.')
+
+            # obj is either a module or a class
+            obj = derived_class_locals[components[0]]
+
+            for c in components[1:]:
+                assert(inspect.ismodule(obj) or inspect.isclass(obj))
+                obj = getattr(obj, c)
+
+            base_classes[i] = obj
+
+    assert(any(hasattr(cls, method.__name__) for cls in base_classes))
+    return method
 
 # TODO :
 #  - Tests unitaires et tests intégrations : test pipeline
@@ -69,12 +108,12 @@ class MetaProcess(metaclass=ABCMeta):
         return self.process_desc
 
     @abstractmethod
-    def run(self, images: Iterable[Iterable]) -> None:
+    def run(self, image: Iterable, **kwargs) -> None:
         """
         Réalise le traitement à effectuer sur la liste d'images. Ne
         retourne rien. Les modifications sont effectuées directement sur
         les images dans la liste.
-        :param images: objet de array-like contenant les images à traiter
+        :param image: image à traiter : objet array-like
         """
 
 
@@ -99,7 +138,7 @@ class Preprocess(MetaProcess):
         super().__init__(*args, **kwargs)
 
     @abstractmethod
-    def run(self, images: Iterable[Iterable]) -> None:
+    def run(self, image: Iterable, **kwargs) -> Iterable:
         pass
 
 
@@ -121,10 +160,10 @@ class Process(MetaProcess):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.json: dict = {}
 
+    @overrides
     @abstractmethod
-    def run(self, images: Iterable[Iterable]) -> None:
+    def run(self, image: Iterable, json: dict, **kwargs) -> None:
         pass
 
 
@@ -147,8 +186,10 @@ class Postprocess(MetaProcess):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    @overrides
     @abstractmethod
-    def run(self, images: Iterable[Iterable]) -> None:
+    def run(self, image: Iterable, json: dict, **kwargs) -> None:
+        super()
         pass
 
 
@@ -166,6 +207,7 @@ class Pipeline:
         self.pre_process: Iterable[Preprocess] = np.array([])
         self.process: Iterable[Process] = np.array([])
         self.post_process: Iterable[Postprocess] = np.array([])
+        self.json = {}
 
     def add_processes(self, in_process: Iterable[MetaProcess]):
         """
@@ -219,7 +261,7 @@ class Pipeline:
             print(process.process_desc)
 
     # Pas besoin de retourner les variables : on modifie directement les images
-    def run_pipeline(self, images: Iterable[Iterable]) -> None:
+    def run_pipeline(self, images: Iterable[Iterable], **kwargs) -> None:
         """
         Execute le pipeline. Il sera executé dans l'ordre
             - le pré-processing
@@ -232,35 +274,36 @@ class Pipeline:
         :param images: objet array-like : contient la liste de images
         :return: None
         """
-        print("Début du pipeline : ")
-        for num, pre_process in enumerate(self.pre_process):
-            try:
-                print("Doing : " + pre_process.process_desc)
-                pre_process.run(images)
-            except Exception as e:
-                print("Le pré-processing numéro " + str(num)
-                      + "( " + pre_process.process_desc
-                      + " ) a levé une erreur.")
-                print(e)
+        for image in images:
+            print("Début du pipeline : ")
+            for num, pre_process in enumerate(self.pre_process):
+                try:
+                    print("Doing : " + pre_process.process_desc)
+                    pre_process.run(image, **kwargs)
+                except Exception as e:
+                    print("Le pré-processing numéro " + str(num)
+                          + "( " + pre_process.process_desc
+                          + " ) a levé une erreur.")
+                    print(e)
 
-        for num, process in enumerate(self.process):
-            try:
-                print("Doing : " + process.process_desc)
-                process.run(images)
-            except Exception as e:
-                print("Le processing numéro " + str(num)
-                      + "( " + process.process_desc + " ) a levé une erreur.")
-                print(e)
+            for num, process in enumerate(self.process):
+                try:
+                    print("Doing : " + process.process_desc)
+                    process.run(image, **kwargs)
+                except Exception as e:
+                    print("Le processing numéro " + str(num)
+                          + "( " + process.process_desc + " ) a levé une erreur.")
+                    print(e)
 
-        for num, post_process in enumerate(self.post_process):
-            try:
+            for num, post_process in enumerate(self.post_process):
+                try:
 
-                print("Doing : " + post_process.process_desc)
-                post_process.run(images)
-            except Exception as e:
-                print("Le post_processing numéro " + str(num)
-                      + " a levé une erreur.")
-                print(e)
+                    print("Doing : " + post_process.process_desc)
+                    post_process.run(image, **kwargs)
+                except Exception as e:
+                    print("Le post_processing numéro " + str(num)
+                          + " a levé une erreur.")
+                    print(e)
 
 
 ''' 
