@@ -20,6 +20,9 @@ Lien du document drive décrivant un peu le projet : https://docs.google.com/doc
     - [ ] Normalisation des images pour les mettre à la même échelle
     - [x] Transformation couleurs 
 #### - Traitement de la donnée :
+- [x]  Choix des modèles de données : 
+    - [x] Sortie de process
+    - [x] Sortie de post-process 
 - [ ]  Formalisation des modèles de données 
     - [ ] Sortie de process
     - [ ] Sortie de post process 
