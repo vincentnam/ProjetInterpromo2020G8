@@ -6,9 +6,97 @@ Group 8
 
 from abc import ABCMeta, abstractmethod
 from typing import Iterable
-import numpy as np
+
 import inspect
 import re
+
+import os
+import cv2 as cv
+import matplotlib.pyplot as plt
+
+import numpy as np
+
+from collections import defaultdict
+from PIL import Image
+
+
+class ImageUtil():
+    def __init__(self, input_path, image_name, image=None):
+        self.input_path = input_path
+        self.image_name = image_name
+        if image is None:
+            self.image_pil = Image.open(self.input_path + self.image_name)
+            self.image_plt = plt.imread(self.input_path + self.image_name)
+            self.image = image
+        else:
+            self.image_pil = image
+            self.image_plt = image
+            self.image = image
+
+        self.sort_pixel = {}
+
+    def sort_pixel(self):
+        """
+            Sort the pixel value by number of occurences that they appear in the image
+        """
+        by_color = defaultdict(int)
+        for pixel in self.image_pil.getdata():
+            by_color[pixel] += 1
+
+        self.sort_pixel = {k: v for k, v in
+                           sorted(by_color.items(), key=lambda item: item[1],
+                                  reverse=True)}
+
+    def visualisation(self, x_size, y_size):
+        """
+            Show the image
+            params :
+                x_size - width of the plot
+                y_size - height of the plot
+        """
+        plt.figure(figsize=(x_size, y_size))
+        if self.image is not None:
+            plt.imshow(self.image.astype('uint8'))
+        else:
+            plt.imshow(self.image_plt.astype('uint8'))
+
+    def to_rgb(self):
+        """
+            Convert the image to an RGB format from a BGR format
+        """
+        return cv.cvtColor(self.image_plt, cv.COLOR_BGR2RGB)
+
+COLOURS = {
+    'LAYOUT_SEATGURU': {
+        'jpg': {
+            "blue": [139, 168, 198],
+            "yellow": [247, 237, 86],
+            "exit": [222, 111, 100],
+            "green": [89, 185, 71],
+            "red_bad_seat": [244, 121, 123],
+            "blue_seat_crew": [140, 169, 202],
+            "baby": [184, 214, 240]
+        },
+        'png': {
+            "blue": [41, 182, 209],
+            "yellow": [251, 200, 2],
+            "exit": [190, 190, 190],
+            "green": [41, 209, 135],
+            "red_bad_seat": [226, 96, 82],
+            "blue_seat_crew": [41, 182, 209],
+            "baby": [197, 197, 197]
+        }
+    },
+    'LAYOUT_SEATMAESTRO': {
+        'png': {
+            "blue": [81, 101, 181],
+            "exit": [1, 120, 175],
+            "green": [120, 189, 198],
+            "red_bad_seat": [207, 90, 150],
+            "blue_seat_crew": [138, 165, 190]
+        }
+    }
+}
 
 
 def overrides(method):
@@ -59,6 +147,156 @@ def overrides(method):
 #  - Gestion de l'héritage des docstrings
 
 
+class ImageUtil():
+    def __init__(self, input_path, image_name, image=None):
+        self.input_path = input_path
+        self.image_name = image_name
+        if image is None:
+            self.image_pil = Image.open(self.input_path + self.image_name)
+            self.image_plt = plt.imread(self.input_path + self.image_name)
+        else:
+            self.image_pil = image
+            self.image_plt = image
+            self.image = image
+
+        self.sort_pixel = {}
+
+    def sort_pixel(self):
+        """
+            Sort the pixel value by number of occurences that they appear in the image
+        """
+        by_color = defaultdict(int)
+        for pixel in self.image_pil.getdata():
+            by_color[pixel] += 1
+
+        self.sort_pixel = {k: v for k, v in
+                           sorted(by_color.items(), key=lambda item: item[1],
+                                  reverse=True)}
+
+    def visualisation(self, x_size, y_size):
+        """
+            Show the image
+            params :
+                x_size - width of the plot
+                y_size - height of the plot
+        """
+        plt.figure(figsize=(x_size, y_size))
+        if self.image is not None:
+            plt.imshow(self.image.astype('uint8'))
+        else:
+            plt.imshow(self.image_plt.astype('uint8'))
+
+    def to_rgb(self):
+        """
+            Convert the image to an RGB format from a BGR format
+        """
+        return cv.cvtColor(self.image_plt, cv.COLOR_BGR2RGB)
+
+    def to_gray(self):
+        """
+            Convert the image to a GRAY format from a BGR format
+        """
+        return cv.cvtColor(self.image_plt, cv.COLOR_BGR2GRAY)
+
+    def save_image(self, output_path):
+        """
+            Save the image to specific location
+            params :
+                output_path - where the image will be saved
+        """
+        plt.imsave(output_path + self.image_name,
+                   self.image_plt.astype('uint8'))
+
+
+class Colour():
+
+    def __init__(self, input_path, layout, image_name):
+        self.input_path = input_path
+        self.layout = layout
+        self.image_name = image_name
+        self.image_extension = image_name.split('.')[-1]
+
+        self.image = plt.imread(
+            self.input_path + self.layout + '/' + self.image_name)
+        self.image_util = ImageUtil(self.input_path + self.layout + '/',
+                                    self.image_name)
+
+    def colour_detection(self, colours, epsilon, rgb_len, colour_mode,
+                         default_colour):
+        """
+            This function will detect the colour and will do some pre-process on it
+            params :
+                colours : a dictionnary with a list of specified colours
+                epsilon : threshold that allows to consider a colour from another one as close
+                rgb_len : only take the 3 first elements from pixel (RGB norm)
+                colour_mode :
+                    if true : it means that if we consider a colour from the image close
+                    to a colour from the "colours" dict, then it will replace the colour by the one in the dict.
+                    if false : it means that if we consider a colour from the image close
+                    to a colour from the "colours" dict, then it will replace the colour by the default color value.
+                default_color : default color value that a pixel has to take
+        """
+        # make a copy to avoid to erase the original image
+        img_copy = self.image_util.to_rgb()
+
+        # for each line we get the pixel value
+        for i, line in enumerate(self.image):
+            for j, pixel in enumerate(line):
+                # Get only 3 first value corresponding to R,G,B
+                pixel = [int(val) if val > 1.0 else int(val * 255) for val in
+                         self.image[i][j]][:rgb_len]
+
+                # if we want to show a specific colour
+                if colour_mode:
+                    # default value
+                    img_copy[i][j] = default_colour
+
+                    # for each colour we change the pixel value if we find the same colour
+                    for colour in colours.values():
+                        if sum([1 if abs(p - b) < epsilon else 0 for p, b in
+                                zip(pixel, colour)]) == rgb_len:
+                            img_copy[i][j] = colour
+
+                # if we want to hide a colour by a default value
+                else:
+                    # default value
+                    img_copy[i][j] = pixel
+
+                    # for each recognized colour, we change it by the default value
+                    for colour in colours.values():
+                        if sum([1 if abs(p - b) < epsilon else 0 for p, b in
+                                zip(pixel, colour)]) == rgb_len:
+                            img_copy[i][j] = default_colour
+        return img_copy
+
+    def colour_pipeline(self, colours={}, epsilon=20, colour_mode=True,
+                        default_colour=[0, 0, 0], rgb_len=3):
+        """
+            Call colour_detection function in order to pre-process colours in image
+            params :
+                colours : a dictionnary with a list of specified colours
+                epsilon : threshold that allows to consider a colour from another one as close
+                rgb_len : only take the 3 first elements from pixel (RGB norm)
+                colour_mode :
+                    - if true (highlight colours in "colours" dict by standardize it) : it means that
+                    if we consider a colour from the image close to a colour from the "colours" dict,
+                    then it will replace the colour by the one in the dict.
+                    - if false (remove colours in "colours" dict by the default one) : it means that
+                    if we consider a colour from the image close to a colour from the "colours" dict,
+                    then it will replace the colour by the default color value.
+                default_color : default color value that a pixel has to take
+        """
+        # if colours is empty we take the default value
+        if not bool(colours): colours = COLOURS[self.layout][
+            self.image_extension]
+
+        # get the image result from colour decection pre-process wanted
+        image_res = self.colour_detection(colours, epsilon, rgb_len,
+                                          colour_mode, default_colour)
+
+        return image_res
+
+
 class NotProcessClass(Exception):
     def __init__(self, expression, message):
         """
@@ -93,7 +331,7 @@ class MetaProcess(metaclass=ABCMeta):
             raise NotImplementedError("Définissez une description pour "
                                       + "le process.")
 
-    def __init__(self, verbose=1):
+    def __init__(self, verbose=1,*args, **kwargs):
         self.verbose = verbose
         self.check_attributes()
         super().__init__()
@@ -134,11 +372,14 @@ class Preprocess(MetaProcess):
 
     process_desc = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, col_obj, util_obj,*args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.col_obj = col_obj
+        self.util_obj = util_obj
 
+    @overrides
     @abstractmethod
-    def run(self, image: Iterable, **kwargs) -> Iterable:
+    def run(self, **kwargs) -> Iterable:
         pass
 
 
@@ -183,8 +424,8 @@ class Postprocess(MetaProcess):
     """
     process_desc = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self):
+        super().__init__()
 
     @overrides
     @abstractmethod
@@ -203,13 +444,19 @@ class Pipeline:
     fonction add_pre_process
     """
 
-    def __init__(self) -> None:
-        self.pre_process: Iterable[Preprocess] = np.array([])
-        self.process: Iterable[Process] = np.array([])
-        self.post_process: Iterable[Postprocess] = np.array([])
+    def __init__(self, data_path, list_images_name: Iterable[str], layouts: Iterable[str] = ['LAYOUT_SEATGURU', 'LAYOUT_SEATMAESTRO']) -> None:
+        self.pre_process: Iterable[type] = np.array([])
+        self.process: Iterable[type] = np.array([])
+        self.post_process: Iterable[type] = np.array([])
         self.json = {}
 
-    def add_processes(self, in_process: Iterable[MetaProcess]):
+        # definition of input path for images
+        self.data_path = data_path
+        self.layouts = layouts
+        self.list_images_name = list_images_name
+        self.input_path = self.data_path + self.layouts[0] + '/'
+
+    def add_processes(self, in_process: Iterable):
         """
         Ajoute une liste de process dans le pipeline.
         :param in_process: Iterable[MetaProcess] : Liste des process à
@@ -217,10 +464,10 @@ class Pipeline:
         """
         wrong_processes: tuple = ()
         for process in in_process:
-            if not (isinstance(process, Postprocess)
-                    or isinstance(process, Process)
-                    or isinstance(process, Preprocess)):
-                if MetaProcess in process.__class__.__mro__:
+            if not (Preprocess in process.__mro__
+                    or Process in process.__mro__
+                    or Postprocess in process.__mro__):
+                if MetaProcess in process.__mro__:
                     wrong_process = ((process.process_desc,
                                       process.__class__,),)
 
@@ -231,16 +478,16 @@ class Pipeline:
                     continue
 
             else:
-                if isinstance(process, Preprocess):
+                if Preprocess in process.__mro__:
                     self.pre_process = np.append(self.pre_process,
                                                  np.array([process]))
                     print(process.process_desc + " a été ajouté.")
-                if isinstance(process, Process):
+                if Process in process.__mro__:
                     self.process = np.append(self.process,
                                              np.array([process]))
                     print(process.process_desc + " a été ajouté.")
 
-                if isinstance(process, Postprocess):
+                if Postprocess in process.__mro__:
                     self.post_process = np.append(self.post_process,
                                                   np.array([process]))
                     print(process.process_desc + " a été ajouté.")
@@ -261,7 +508,7 @@ class Pipeline:
             print(process.process_desc)
 
     # Pas besoin de retourner les variables : on modifie directement les images
-    def run_pipeline(self, images: Iterable[Iterable], **kwargs) -> None:
+    def run_pipeline(self, nb_images:int, **kwargs) -> None:
         """
         Execute le pipeline. Il sera executé dans l'ordre
             - le pré-processing
@@ -274,32 +521,53 @@ class Pipeline:
         :param images: objet array-like : contient la liste de images
         :return: None
         """
-        for image in images:
+
+
+        for image_name in os.listdir(self.input_path)[:nb_images]:
+            # Create a Colour object
+            col_obj = Colour(self.data_path, self.layouts[0], image_name)
+            # Create a
+            util_obj = ImageUtil(self.data_path + self.layouts[0] + "/", image_name)
+            plt.figure(figsize=(40,40))
+            plt.imshow(col_obj.image)
+            plt.show()
             print("Début du pipeline : ")
+            image = None
             for num, pre_process in enumerate(self.pre_process):
+
+                pre_pro = pre_process(col_obj, util_obj)
                 try:
-                    print("Doing : " + pre_process.process_desc)
-                    pre_process.run(image, **kwargs)
+                    # Instanciation du process
+                    print("Doing : " + pre_pro.process_desc)
+                    image = pre_pro.run(**kwargs)
+                    plt.figure(figsize=(40,40))
+                    plt.imshow(image)
+                    plt.show()
                 except Exception as e:
                     print("Le pré-processing numéro " + str(num)
-                          + "( " + pre_process.process_desc
+                          + "( " + pre_pro.process_desc
                           + " ) a levé une erreur.")
                     print(e)
 
             for num, process in enumerate(self.process):
+                pro = process()
                 try:
-                    print("Doing : " + process.process_desc)
-                    process.run(image, **kwargs)
+                    if image is not None:
+                        print("Doing : " + pro.process_desc)
+                        # data_image = le path de l'image
+                        pro.run(image, self.json,image_rgb = col_obj.image, data_image = self.data_path + self.layouts[0] + "/" + image_name ,**kwargs)
+                    else:
+                        raise ValueError("Image = None")
                 except Exception as e:
                     print("Le processing numéro " + str(num)
-                          + "( " + process.process_desc + " ) a levé une erreur.")
+                          + "( " + pro.process_desc + " ) a levé une erreur.")
                     print(e)
 
             for num, post_process in enumerate(self.post_process):
+                post_pro = post_process()
                 try:
-
-                    print("Doing : " + post_process.process_desc)
-                    post_process.run(image, **kwargs)
+                    print("Doing : " + post_pro.process_desc)
+                    post_pro.run(image, self.json, **kwargs)
                 except Exception as e:
                     print("Le post_processing numéro " + str(num)
                           + " a levé une erreur.")
@@ -372,3 +640,7 @@ if __name__ == "__main__":
     pipeline.run_pipeline([])
     print(Augmentation.run.__doc__)
 '''
+
+
+
+
