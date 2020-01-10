@@ -1,3 +1,5 @@
+matplotlib
+Pillow
 pandas
 numpy
 opencv-python
