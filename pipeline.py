@@ -528,7 +528,7 @@ class Pipeline:
             col_obj = Colour(self.data_path, self.layouts[0], image_name)
             # Create a
             util_obj = ImageUtil(self.data_path + self.layouts[0] + "/", image_name)
-            plt.figure(figsize=(40,40))
+            plt.figure(figsize=(4,4))
             plt.imshow(col_obj.image)
             plt.show()
             print("Début du pipeline : ")
