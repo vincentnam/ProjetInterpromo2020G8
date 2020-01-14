@@ -20,52 +20,6 @@ from collections import defaultdict
 from PIL import Image
 
 
-class ImageUtil():
-    def __init__(self, input_path, image_name, image=None):
-        self.input_path = input_path
-        self.image_name = image_name
-        if image is None:
-            self.image_pil = Image.open(self.input_path + self.image_name)
-            self.image_plt = plt.imread(self.input_path + self.image_name)
-            self.image = image
-        else:
-            self.image_pil = image
-            self.image_plt = image
-            self.image = image
-
-        self.sort_pixel = {}
-
-    def sort_pixel(self):
-        """
-            Sort the pixel value by number of occurences that they appear in the image
-        """
-        by_color = defaultdict(int)
-        for pixel in self.image_pil.getdata():
-            by_color[pixel] += 1
-
-        self.sort_pixel = {k: v for k, v in
-                           sorted(by_color.items(), key=lambda item: item[1],
-                                  reverse=True)}
-
-    def visualisation(self, x_size, y_size):
-        """
-            Show the image
-            params :
-                x_size - width of the plot
-                y_size - height of the plot
-        """
-        plt.figure(figsize=(x_size, y_size))
-        if self.image is not None:
-            plt.imshow(self.image.astype('uint8'))
-        else:
-            plt.imshow(self.image_plt.astype('uint8'))
-
-    def to_rgb(self):
-        """
-            Convert the image to an RGB format from a BGR format
-        """
-        return cv.cvtColor(self.image_plt, cv.COLOR_BGR2RGB)
-
 COLOURS = {
     'LAYOUT_SEATGURU': {
         'jpg': {
@@ -161,6 +115,12 @@ class ImageUtil():
 
         self.sort_pixel = {}
 
+    # Setter for image updating
+    def set_image(self, image):
+        self.image_pil = image
+        self.image_plt = image
+        self.image = image
+
     def sort_pixel(self):
         """
             Sort the pixel value by number of occurences that they appear in the image
@@ -218,8 +178,13 @@ class Colour():
 
         self.image = plt.imread(
             self.input_path + self.layout + '/' + self.image_name)
-        self.image_util = ImageUtil(self.input_path + self.layout + '/',
+        self.util_obj = ImageUtil(self.input_path + self.layout + '/',
                                     self.image_name)
+
+    # Setter for image update on preprocess
+    def set_image(self, image):
+        self.image = image
+        self.util_obj.set_image(image)
 
     def colour_detection(self, colours, epsilon, rgb_len, colour_mode,
                          default_colour):
@@ -237,7 +202,7 @@ class Colour():
                 default_color : default color value that a pixel has to take
         """
         # make a copy to avoid to erase the original image
-        img_copy = self.image_util.to_rgb()
+        img_copy = self.util_obj.to_rgb()
 
         # for each line we get the pixel value
         for i, line in enumerate(self.image):
@@ -290,7 +255,7 @@ class Colour():
         if not bool(colours): colours = COLOURS[self.layout][
             self.image_extension]
 
-        # get the image result from colour decection pre-process wanted
+        # get the image result from colour detection pre-process wanted
         image_res = self.colour_detection(colours, epsilon, rgb_len,
                                           colour_mode, default_colour)
 
@@ -372,10 +337,9 @@ class Preprocess(MetaProcess):
 
     process_desc = None
 
-    def __init__(self, col_obj, util_obj,*args, **kwargs):
+    def __init__(self, col_obj,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.col_obj = col_obj
-        self.util_obj = util_obj
 
     @overrides
     @abstractmethod
@@ -393,7 +357,7 @@ class Process(MetaProcess):
     obligatoirement être implémenté la fonction run(self,images) et
     l'attribut process_desc (avec une valeur différente de None ou "").
     Ex :
-    class Preprocess_exemple(Proprocess):
+    class Process_exemple(Process):
         process_desc = "PyTesseract2.0-> recherche de caractères"
     ...
     """
@@ -508,7 +472,7 @@ class Pipeline:
             print(process.process_desc)
 
     # Pas besoin de retourner les variables : on modifie directement les images
-    def run_pipeline(self, nb_images:int, **kwargs) -> None:
+    def run_pipeline(self, nb_images: int, **kwargs) -> None:
         """
         Execute le pipeline. Il sera executé dans l'ordre
             - le pré-processing
@@ -527,7 +491,8 @@ class Pipeline:
             # Create a Colour object
             col_obj = Colour(self.data_path, self.layouts[0], image_name)
             # Create a
-            util_obj = ImageUtil(self.data_path + self.layouts[0] + "/", image_name)
+            #util_obj = ImageUtil(self.data_path + self.layouts[0] + "/", image_name)
+            temp_json = {}
             plt.figure(figsize=(4,4))
             plt.imshow(col_obj.image)
             plt.show()
@@ -535,13 +500,14 @@ class Pipeline:
             image = None
             for num, pre_process in enumerate(self.pre_process):
 
-                pre_pro = pre_process(col_obj, util_obj)
+                pre_pro = pre_process(col_obj)
                 try:
                     # Instanciation du process
                     print("Doing : " + pre_pro.process_desc)
                     image = pre_pro.run(**kwargs)
+                    col_obj.set_image(image)
                     plt.figure(figsize=(40,40))
-                    plt.imshow(image)
+                    plt.imshow(col_obj.image)
                     plt.show()
                 except Exception as e:
                     print("Le pré-processing numéro " + str(num)
@@ -555,7 +521,7 @@ class Pipeline:
                     if image is not None:
                         print("Doing : " + pro.process_desc)
                         # data_image = le path de l'image
-                        pro.run(image, self.json,image_rgb = col_obj.image, data_image = self.data_path + self.layouts[0] + "/" + image_name ,**kwargs)
+                        pro.run(image, temp_json,image_rgb = col_obj.image, data_image = self.data_path + self.layouts[0] + "/" + image_name ,**kwargs)
                     else:
                         raise ValueError("Image = None")
                 except Exception as e:
@@ -567,11 +533,12 @@ class Pipeline:
                 post_pro = post_process()
                 try:
                     print("Doing : " + post_pro.process_desc)
-                    post_pro.run(image, self.json, **kwargs)
+                    post_pro.run(temp_json, **kwargs)
                 except Exception as e:
                     print("Le post_processing numéro " + str(num)
                           + " a levé une erreur.")
                     print(e)
+            self.json[image_name] = temp_json
 
 
 ''' 
