@@ -492,7 +492,7 @@ class Pipeline:
             col_obj = Colour(self.data_path, self.layouts[0], image_name)
             # Create a
             #util_obj = ImageUtil(self.data_path + self.layouts[0] + "/", image_name)
-            temp_json = {}
+
             plt.figure(figsize=(4,4))
             plt.imshow(col_obj.image)
             plt.show()
@@ -521,7 +521,9 @@ class Pipeline:
                     if image is not None:
                         print("Doing : " + pro.process_desc)
                         # data_image = le path de l'image
-                        pro.run(image, temp_json,image_rgb = col_obj.image, data_image = self.data_path + self.layouts[0] + "/" + image_name ,**kwargs)
+                        pro.run(image, self.json,image_rgb = col_obj.image,
+                                data_image = self.data_path + self.layouts[0]
+                                             + "/" + image_name ,**kwargs)
                     else:
                         raise ValueError("Image = None")
                 except Exception as e:
@@ -533,12 +535,11 @@ class Pipeline:
                 post_pro = post_process()
                 try:
                     print("Doing : " + post_pro.process_desc)
-                    post_pro.run(temp_json, **kwargs)
+                    post_pro.run(self.json, **kwargs)
                 except Exception as e:
                     print("Le post_processing numéro " + str(num)
                           + " a levé une erreur.")
                     print(e)
-            self.json[image_name] = temp_json
 
 
 ''' 
