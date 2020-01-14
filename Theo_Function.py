@@ -1,29 +1,27 @@
 import os
-os.getcwd()
-os.chdir('c:\\Users\\Stior\\Documents\\cours\\L3SID\\Projet-InterPromo\
-\\ProjetInterpromo2020G8')
-
 from pipeline import Pipeline, Process, Postprocess, Preprocess
 import numpy as np
 import pandas as pd
 import cv2
-from matplotlib import pyplot as plt
-import PIL
 
 
 class MyPreProcess(Preprocess):
     process_desc = "Exemple de pre-process -> ne fait rien"
+
     def run(self, images):
         pass
 
 
 class MyProcess(Process):
     process_desc = "Exemple de process -> ne fait rien"
+
     def run(self, images):
         pass
-    
+
+
 class MyPostProcess(Postprocess):
     process_desc = "Exemple de post-process -> ne fait rien"
+
     def run(self, images):
         pass
 
@@ -88,15 +86,22 @@ def template_from_template(img, template, thresholdMin=0.70):
 
 
 def count_list(list):
+    """
+    input:
+        list : list
+    output:
+        ordored list with single occurence
+    """
     dictio_count = {}
     for el in list:
         dictio_count[el] = list.count(el)
     return {k: v for k, v in sorted(dictio_count.items(),\
-     key=lambda item: item[1], reverse=True)}
+        key=lambda item: item[1], reverse=True)}
 
 
-def best_position(img, template, nbSeat, steps=0.005, thresholdMin=0.65):
+def best_position(img, template, nbSeat, step=0.005, thresholdMin=0.65):
     """
+    Keep the best nbSeat positions
     input:
         img : image plane
         template : template find from this image
@@ -109,7 +114,10 @@ def best_position(img, template, nbSeat, steps=0.005, thresholdMin=0.65):
     position = []
     for threshold in np.arange(thresholdMin, 1 + step, step):
         position += coord_pattern_finder(img, template, threshold)
-    return(list(count_list(position).keys())[:nbSeat])
+    result = list(count_list(position).keys())
+    if len(result) < nbSeat:
+        return(result)
+    return(result[:nbSeat])
 
 
 def rematch(img, nbObjectToFind, diction, planeName, path='./images/'):
@@ -126,7 +134,6 @@ def rematch(img, nbObjectToFind, diction, planeName, path='./images/'):
         diction : dictionnary {'class':[(coordX1, coordY1, h, w),
                                         (coordX2, coordY2, h, w)]}
     """
-
     for cat in nbObjectToFind.keys():
         diction[planeName][cat] = []
         if cat != 'Total_seat':
