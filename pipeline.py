@@ -541,6 +541,9 @@ class Pipeline:
                           + " a levé une erreur.")
                     print(e)
 
+
+
+
 class Distpipeline:
 
     def __init__(self, seat_pipeline, element_pipeline):
@@ -548,7 +551,7 @@ class Distpipeline:
         self.element_pipeline = element_pipeline
 
     def run_output(self, json_seat, json_elements) -> dict:
-        pass
+
 ''' 
 
 # Fonction de test : à mettre en place si besoin 
