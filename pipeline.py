@@ -485,7 +485,7 @@ class Pipeline:
         :param images: objet array-like : contient la liste de images
         :return: None
         """
-
+        self.print_process()
 
         for image_name in os.listdir(self.input_path)[:nb_images]:
             # Create a Colour object
@@ -541,7 +541,14 @@ class Pipeline:
                           + " a levé une erreur.")
                     print(e)
 
+class Distpipeline:
 
+    def __init__(self, seat_pipeline, element_pipeline):
+        self.seat_pipeline = seat_pipeline
+        self.element_pipeline = element_pipeline
+
+    def run_output(self, json_seat, json_elements) -> dict:
+        pass
 ''' 
 
 # Fonction de test : à mettre en place si besoin 
