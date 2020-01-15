@@ -13,11 +13,53 @@ import re
 import os
 import cv2 as cv
 import matplotlib.pyplot as plt
-
+import pandas as pd
 import numpy as np
 
 from collections import defaultdict
 from PIL import Image
+
+
+
+
+import os
+import cv2 as cv
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from collections import defaultdict
+from PIL import Image
+
+import sklearn
+from sklearn.cluster import DBSCAN
+
+
+import os
+import cv2 as cv
+import matplotlib.pyplot as plt
+import numpy as np
+import numpy as np
+import pandas as pd
+from collections import defaultdict
+from PIL import Image
+
+from matplotlib import image
+import matplotlib.patches as mpatches
+from matplotlib import patches
+from skimage import io
+import skimage.segmentation as seg
+from skimage.segmentation import clear_border
+import skimage.filters as filters
+from skimage.filters import threshold_otsu
+import skimage.draw as draw
+import skimage.color as color
+from skimage.color import label2rgb
+from skimage.measure import label, regionprops
+from skimage.morphology import closing, square
+import sklearn
+from sklearn.cluster import DBSCAN
+
+
 
 
 COLOURS = {
@@ -551,7 +593,124 @@ class Distpipeline:
         self.element_pipeline = element_pipeline
 
     def run_output(self, json_seat, json_elements) -> dict:
+        pass
 
+
+class DistPipeline:
+
+    def find_cluster(self, epsilon: int, min_sample: int, list_wo_dup: list):
+        """Documentation
+        Parameters:
+            epsilon: the maximum distance between two samples for one to be considered as in the neighborhood of the other
+            min_sample: the number of samples in a neighborhood for a point to be considered as a core point
+            list_wo_dup: list of seats coordinates not duplicated
+        Out:
+            dbscan: clustering result with DBSCAN
+        """
+        x_wo_dup = [a for a, b in list_wo_dup]
+        y_wo_dup = [b for a, b in list_wo_dup]
+        dbscan = DBSCAN(eps=epsilon, min_samples=min_sample).fit(list_wo_dup)
+        plt.scatter(x_wo_dup, y_wo_dup, c=dbscan.labels_.astype(
+            float), s=50, alpha=0.5)
+        plt.show()
+        return(dbscan)
+
+    def clusters_to_rect(self, dbscan: sklearn.cluster.DBSCAN, array_wo_dup: np.array):
+        """Documentation
+        Parameters:
+            dbscan: clustering result with DBSCAN
+        Out:
+            list_rect: list of rectangles representing each cluster
+        """
+        list_coord = array_wo_dup
+        label_groups = pd.Series(dbscan.labels_).unique()
+        list_rect = []  # to plot with plt.patches
+        list_rect2 = []  # all corners of the rectangles
+        HEIGHT: int = 30
+        WIDTH: int = 20
+        for group in label_groups:
+            index = [i for i, x in enumerate(
+                list(dbscan.labels_)) if x == group]
+            points_cluster = list_coord[index]
+            corner_bottom_right = (max(i[0] for i in points_cluster) + WIDTH, min(
+                i[1] for i in points_cluster) - HEIGHT)
+            corner_top_right = (max(i[0] for i in points_cluster) + WIDTH, max(
+                i[1] for i in points_cluster))
+            corner_top_left = (min(i[0] for i in points_cluster), max(
+                i[1] for i in points_cluster))
+            corner_bottom_left = (min(i[0] for i in points_cluster), min(
+                i[1] for i in points_cluster) - HEIGHT)
+            height = corner_top_right[1] - corner_bottom_right[1]
+            width = corner_bottom_right[0] - corner_bottom_left[0]
+            list_rect.append(((corner_bottom_left), width, height))
+            list_rect2.append(
+                (corner_bottom_left, corner_top_left, corner_top_right, corner_bottom_right))
+        return list_rect, list_rect2
+
+    def centroid_obstacle(self, coord_obs: list):
+        """Documentation
+        Parameters:
+            coord_obs: cooardinate of the obstacle (list of tuple)
+        Out:
+            coord_bar_obs: barycenter cooardinate of the obstacle
+        """
+        A_point = coord_obs[0][1], coord_obs[0][0]
+        B_point = coord_obs[1][1], coord_obs[1][0]
+        coord_bar_obs = int(np.mean([A_point[0], B_point[0]])), int(
+            np.mean([A_point[1], B_point[1]]))
+        return coord_bar_obs
+
+    def centroid_seat(self, coord_seat: tuple):
+        """Documentation
+        Parameters:
+            coord_seat: cooardinate of the seat
+        Out:
+            coord_bar_seat: barycenter cooardinate of the seat
+        """
+        x, y = coord_seat[0], coord_seat[1]
+        h, w = 30, 20
+        coord_bar_seat = int(np.mean([x, x+w])), int(np.mean([y, y+h]))
+        return coord_bar_seat
+
+    def dist_crow_flies(self, coord_bar_seat: tuple, coord_bar_obs: tuple):
+        """Documentation
+        Parameters:
+            coord_bar_seat: barycenter coordinate of the seat
+            coord_bar_obs: barycenter cooardinate of the obstacle
+        Out:
+            dist: distance between the two barycenter
+        """
+        dist = np.sqrt(((coord_bar_obs[0]-coord_bar_seat[0])
+                        ** 2)+((coord_bar_obs[1]-coord_bar_seat[1])**2))
+        return round(dist, 2)
+
+    def run_pipeline(self, json_seat: dict, json_zone: dict, HEIGHT: int = 30, WIDTH: int = 20):
+        """Documentation
+        Parameters:
+            pipeline_zone.json: json ???
+            pipeline.json: json ???
+        Out:
+            dicimg: json final structure
+        """
+        dicimg = {}
+        for img in list(json_zone.keys()):
+            dictypeseat = {}
+            for typeseat in range(len(list(json_seat.keys()))):
+                dicseat = {}
+                for seat in list(json_seat.values())[typeseat]:
+                    j = 0
+                    dicobs = {}
+                    for obs in json_zone[list(json_zone.keys())[0]]["rectangles"]:
+                        j += 1
+                        dicobs[("obstacle"+str(j))] = [self.centroid_obstacle([obs[0:2], obs[2:4]]),
+                                                       self.dist_crow_flies(self.centroid_seat(seat), self.centroid_obstacle([obs[0:2], obs[2:4]]))]
+                    dicseat[(self.centroid_seat(seat), WIDTH, HEIGHT)] = dicobs
+                dictypeseat[list(json_seat.keys())[typeseat][5:len(list(json_seat.keys())[typeseat])-4]] = dicseat
+            dicimg[img] = dictypeseat
+        return dicimg
+
+
+    
 ''' 
 
 # Fonction de test : à mettre en place si besoin 
@@ -618,7 +777,4 @@ if __name__ == "__main__":
     pipeline.run_pipeline([])
     print(Augmentation.run.__doc__)
 '''
-
-
-
 
