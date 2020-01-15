@@ -44,24 +44,35 @@ def coord_pattern_finder(image, template, threshold: float):
     return(position)
 
 
-def templ_category(category, path='./images/'):
+def templ_category(path = './images/TEMPLATE/', category = 'BUSINESS', seatType='STANDARD', planeName='test.jpg'):
     """
+    Create list of template open with cv2 by category and seatType
     Input:
         Path: directory path of templates
-        category: name of category (ex : business)
+        category: name of category
+        seatType: Seat type
+        planeName: plane name
     Output:
         templates: list of template name
     """
-    imagesTemp = os.listdir(path)
+    if '.png' in planeName:
+        extension = 'PNG/'
+    else:
+        extension = 'JPG/'
+
+    imagesTemp = os.listdir(path + category + '/' + extension)
     templates = []
 
     for i in imagesTemp:
-        if 'temp_' + category in i:
-            templates.append(i)
+        if seatType in i:
+            templates.append(cv2.imread(path + category + '/' + extension + i, 0)) 
+            # cv2.imshow('TEST', cv2.imread(path + category + '/' + extension + i, 0))
+            # cv2.waitKey()
+            # cv2.destroyAllWindows()   
     return(templates)
 
 
-def template_from_template(img, template, thresholdMin=0.70):
+def template_from_template(img, template, thresholdMin = 0.70):
     """
     intput:
         img : image plane
@@ -80,8 +91,10 @@ def template_from_template(img, template, thresholdMin=0.70):
         position = coord_pattern_finder(img, template, threshold)
 
     if threshold > thresholdMin:
-        return((img[position[0][1]:position[0][1] + h,\
-         position[0][0]:position[0][0] + w], True))
+        # cv2.imshow('name', img[position[0][1]:position[0][1] + h, position[0][0]:position[0][0] + w])
+        # cv2.waitKey()
+        # cv2.destroyAllWindows()
+        return((img[position[0][1]:position[0][1] + h, position[0][0]:position[0][0] + w], True))
     return((None, False))
 
 
@@ -99,56 +112,45 @@ def count_list(list):
         key=lambda item: item[1], reverse=True)}
 
 
-def best_position(img, template, nbSeat, step=0.005, thresholdMin=0.65):
+def best_position(img, template, nbSeat, step = 0.005, thresholdMin = 0.65):
     """
-    Keep the best nbSeat positions
     input:
         img : image plane
         template : template find from this image
-        nbSeat : for this cat
+        nbSeat : integrer - for this cat
         steps : steps for threshold
     output:
         position : coord for each match
     """
-    threshold = 1
     position = []
     for threshold in np.arange(thresholdMin, 1 + step, step):
         position += coord_pattern_finder(img, template, threshold)
     result = list(count_list(position).keys())
-    if len(result) < nbSeat:
+    if len(result) < nbSeat*1.1:
         return(result)
-    return(result[:nbSeat])
+    return(result[:int(nbSeat*1.1)])
 
 
-def rematch(img, nbObjectToFind, diction, planeName, path='./images/'):
+def rematch(img, nbObjectToFind, diction, planeName, path = './images/'):
     """
     input:
         img : image plane
-        nbObjectToFind : Dictionnary : {'Total_seat': nbSeatTotal,
-                                        'business': nbBusinessSeat,
-                                        'bar': nbBar}
+        nbObjectToFind : Dictionnary : {'Total_seat': nbSeatTotal, 'business': nbBusinessSeat, 'bar': nbBar}
         diction : diction output
         planeName :
         path : path for template directory
     output:
-        diction : dictionnary {'class':[(coordX1, coordY1, h, w),
-                                        (coordX2, coordY2, h, w)]}
+        diction : dictionnary {'class':[(coordX1, coordY1, h, w), (coordX2, coordY2, h, w)]}
     """
-    for cat in nbObjectToFind.keys():
-        diction[planeName][cat] = []
-        if cat != 'Total_seat':
-            # Take all template name for this category
-            templates = templ_category(category=cat)
-            print(templates)
-            for templ in templates:
-                template = cv2.imread(path + templ, 0)
-                templateFind, find = template_from_template(img, template)
-                # print('Ok!')
-                if find:
-                    # print('Ok2!')
-                    position = best_position(img, templateFind,\
-                     nbObjectToFind[cat])
-                    h, w = template.shape
-                    for i in range(len(position)):
-                        position[i] = position[i] + (h, w)
-                    diction[planeName][cat] += position
+    for objet in nbObjectToFind:
+        if not objet['Category'] in diction[planeName].keys():
+            diction[planeName][objet['Category']] = []
+        templates = templ_category(category=objet['Category'], seatType=objet['Seat_Type'], planeName=planeName)  # Take all template name for this category
+        for templ in templates:
+            templateFind, find = template_from_template(img, templ)
+            if find:
+                position = best_position(img, templateFind, objet['Count'])
+                h, w = templ.shape
+                for i in range(len(position)):
+                    position[i] = position[i] + (h, w)
+                diction[planeName][objet['Category']] += position
