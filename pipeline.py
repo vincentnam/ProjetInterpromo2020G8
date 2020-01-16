@@ -6,7 +6,7 @@ Group 8
 
 from abc import ABCMeta, abstractmethod
 from typing import Iterable
-
+import sys
 import inspect
 import re
 
@@ -63,7 +63,7 @@ from sklearn.cluster import DBSCAN
 
 
 COLOURS = {
-    'LAYOUT_SEATGURU': {
+    'LAYOUT SEATGURU': {
         'jpg': {
             "blue": [139, 168, 198],
             "yellow": [247, 237, 86],
@@ -83,7 +83,7 @@ COLOURS = {
             "baby": [197, 197, 197]
         }
     },
-    'LAYOUT_SEATMAESTRO': {
+    'LAYOUT SEATMAESTRO': {
         'png': {
             "blue": [81, 101, 181],
             "exit": [1, 120, 175],
@@ -450,17 +450,22 @@ class Pipeline:
     fonction add_pre_process
     """
 
-    def __init__(self, data_path, list_images_name: Iterable[str], layouts: Iterable[str] = ['LAYOUT_SEATGURU', 'LAYOUT_SEATMAESTRO']) -> None:
+    def __init__(self, data_path, list_images_name: Iterable[str], layouts: Iterable[str] = ['LAYOUT SEATGURU', 'LAYOUT SEATMAESTRO']) -> None:
         self.pre_process: Iterable[type] = np.array([])
         self.process: Iterable[type] = np.array([])
         self.post_process: Iterable[type] = np.array([])
         self.json = {}
 
         # definition of input path for images
+        # data_path : path to Interpromo2020
         self.data_path = data_path
+        # data_path : list of layouts folders names
         self.layouts = layouts
+        self.csv_path = data_path + "All Data/"
         self.list_images_name = list_images_name
-        self.input_path = self.data_path + self.layouts[0] + '/'
+        self.layout_folder_path = self.csv_path + "ANALYSE IMAGE/"
+        self.image_folder_path = self.layout_folder_path + layouts[0] +"/"
+
 
     def add_processes(self, in_process: Iterable):
         """
@@ -514,7 +519,7 @@ class Pipeline:
             print(process.process_desc)
 
     # Pas besoin de retourner les variables : on modifie directement les images
-    def run_pipeline(self, nb_images: int, **kwargs) -> None:
+    def run_pipeline(self, nb_images: int, data_path = None,**kwargs) -> None:
         """
         Execute le pipeline. Il sera executé dans l'ordre
             - le pré-processing
@@ -529,9 +534,9 @@ class Pipeline:
         """
         self.print_process()
 
-        for image_name in os.listdir(self.input_path)[:nb_images]:
+        for image_name in os.listdir(self.image_folder_path)[:nb_images]:
             # Create a Colour object
-            col_obj = Colour(self.data_path, self.layouts[0], image_name)
+            col_obj = Colour(self.layout_folder_path, self.layouts[0], image_name)
             # Create a
             #util_obj = ImageUtil(self.data_path + self.layouts[0] + "/", image_name)
 
@@ -555,22 +560,30 @@ class Pipeline:
                     print("Le pré-processing numéro " + str(num)
                           + "( " + pre_pro.process_desc
                           + " ) a levé une erreur.")
+                    exc_type, exc_obj, exc_tb = sys.exc_info()
+                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[
+                        1]
+                    print(exc_type, fname, exc_tb.tb_lineno)
                     print(e)
 
             for num, process in enumerate(self.process):
-                pro = process()
+                pro = process(csv_data_path=self.csv_path)
                 try:
                     if image is not None:
                         print("Doing : " + pro.process_desc)
                         # data_image = le path de l'image
-                        pro.run(image, self.json,image_rgb = col_obj.image,
-                                data_image = self.data_path + self.layouts[0]
-                                             + "/" + image_name ,**kwargs)
+                        pro.run(image, self.json, image_rgb = col_obj.image,
+                                data_image =self.image_folder_path + image_name,
+                                image_name = image_name, **kwargs)
                     else:
                         raise ValueError("Image = None")
                 except Exception as e:
                     print("Le processing numéro " + str(num)
                           + "( " + pro.process_desc + " ) a levé une erreur.")
+                    exc_type, exc_obj, exc_tb = sys.exc_info()
+                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[
+                        1]
+                    print(exc_type, fname, exc_tb.tb_lineno)
                     print(e)
 
             for num, post_process in enumerate(self.post_process):
@@ -581,6 +594,10 @@ class Pipeline:
                 except Exception as e:
                     print("Le post_processing numéro " + str(num)
                           + " a levé une erreur.")
+                    exc_type, exc_obj, exc_tb = sys.exc_info()
+                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[
+                        1]
+                    print(exc_type, fname, exc_tb.tb_lineno)
                     print(e)
 
 
@@ -777,5 +794,3 @@ if __name__ == "__main__":
     pipeline.run_pipeline([])
     print(Augmentation.run.__doc__)
 '''
-
-
