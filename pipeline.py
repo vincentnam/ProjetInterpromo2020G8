@@ -923,9 +923,7 @@ class SegmentationZone(Process):
                 json[data_image.split('/')[-1]]['coordinates'].append(
                     region['Coordinates'])
 
-    def image_detection_result(self, image_name,
-                               data_path, layouts, im_gray, im_pre,
-                               limit_area):
+    def image_detection_result(self, image_name, im_pre, limit_area):
         # image_name : image chosen
         # data_path : path to access those images
         # layouts : seatguru or seatmaestro
@@ -935,7 +933,7 @@ class SegmentationZone(Process):
         image_detection_result = []
 
         # detect the regions of an image
-        label_image = image_process_label(im_pre)
+        label_image = self.image_process_label(im_pre)
         props = regionprops(label_image)
 
         # prepare the image info
@@ -966,9 +964,9 @@ class SegmentationZone(Process):
 
         return image_detection_result
 
-    def coord_template_matching_image_single(self, liste_temp, path_temp, image_name,
-                                             data_path, layouts, threshold,
-                                             limit_area):
+    def coord_template_matching_image_single(self, image, json, liste_temp,
+                                             path_temp, image_name,threshold,
+                                             limit_area = 80):
         # liste_temp : list of templates
         # path_temp : path to access the list of templates
         # image_name : image
@@ -981,13 +979,11 @@ class SegmentationZone(Process):
         temp_rcgnzd = {}
 
         # Pre-process the image
-        im_pre = preprocess_couleur(data_path, layouts, image_name)
+
 
         # Image rgb to gray
-        im_gray = cv.cvtColor(im_pre, cv.COLOR_RGB2GRAY)
 
-        dict_data = image_detection_result(image_name,
-                                           data_path, layouts, im_gray, im_pre)
+        dict_data = self.image_detection_result(image_name,image, 80)
 
         # Initialize dictionnary of templates type for the image
         type_temp = {}
@@ -1000,16 +996,16 @@ class SegmentationZone(Process):
             h, w = template.shape
 
             # List of match
-            res = cv.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
+            res = cv.matchTemplate(image, template, cv.TM_CCOEFF_NORMED)
 
             position = [pos for pos in zip(*np.where(res >= threshold)[::-1])]
 
             for pos in position:
                 # Draw rectangle around recognized element
-                cv2.rectangle(
-                    im_gray, pos, (pos[0] + w, pos[1] + h), (255, 255, 255), 2)
+                cv.rectangle(
+                    image, pos, (pos[0] + w, pos[1] + h), (255, 255, 255), 2)
 
-                for rect in dict_data[0]['rectangles']:
+                for rect in json[image_name]['rectangles']:
 
                     if pos[0] > rect[1] and pos[0] < rect[3] and pos[1] > rect[
                         0] and pos[1] < rect[2]:
@@ -1028,7 +1024,6 @@ class SegmentationZone(Process):
         plt.imshow(image)
         plt.show()
         self.label_results(image, json, data_image)
-        self.coord_template_matching_image_single(liste_temp, path_list_temp,
-                                             image_name, data_path, layouts,
+        self.coord_template_matching_image_single(image, json,  "./images/zone_templates/",
                                              0.5, 80)
 
