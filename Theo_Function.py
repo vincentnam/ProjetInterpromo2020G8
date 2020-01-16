@@ -60,14 +60,13 @@ class SeatFinder(Process):
         """
         # default Threshold
         threshold = 1
-        position = self.coord_pattern_finder(self, img, template, threshold)
+        position = self.coord_pattern_finder(img, template, threshold)
         h, w = template.shape
         # Reduce Threshold while no template match
         while len(position) < 1 and threshold > thresholdMin:
             threshold -= 0.005
-            position = self.coord_pattern_finder(self, img, template,
+            position = self.coord_pattern_finder(img, template,
                                                  threshold)
-
         if threshold > thresholdMin:
             return(img[position[0][1]:position[0][1] + h,
                        position[0][0]:position[0][0] + w], True)
@@ -100,8 +99,8 @@ class SeatFinder(Process):
         """
         position = []
         for threshold in np.arange(thresholdMin, 1 + step, step):
-            position += self.d_pattern_finder(self, img, template, threshold)
-        result = list(self.count_list(self, position).keys())
+            position += self.coord_pattern_finder(img, template, threshold)
+        result = list(self.count_list(position).keys())
         if len(result) < nbSeat*1.1:
             return(result)
         return(result[:int(nbSeat*1.1)])
@@ -112,7 +111,6 @@ class SeatFinder(Process):
         input:
             img : image plane
             nbObjectToFind : Dictionnary : {
-                                            'Total_seat': nbSeatTotal,
                                             'business': nbBusinessSeat,
                                             'bar': nbBar
                                             }
@@ -120,26 +118,131 @@ class SeatFinder(Process):
             planeName :
             path : path for template directory
         output:
-            diction : dictionnary {'class':[
-                                        (coordX1, coordY1, h, w),
-                                        (coordX2, coordY2, h, w)
-                                    ]}
+            diction : dictionnary [{'Category': 'BUSINESS',
+                                    'Seat_Type': 'FLAT_BED',
+                                    'Count': 30},
+                                   {'Category': 'ECONOMY',
+                                    'Seat_Type': 'STANDARD',
+                                    'Count': 287}]
         """
         for objet in nbObjectToFind:
             if not objet['Category'] in diction[planeName].keys():
                 diction[planeName][objet['Category']] = []
             # Take all template name for this category
-            templates = self.templ_category(self,
-                                            category=objet['Category'],
+            templates = self.templ_category(category=objet['Category'],
                                             seatType=objet['Seat_Type'],
                                             planeName=planeName)
             for templ in templates:
-                templateFind, find = self.template_from_template(self, img,
+                templateFind, find = self.template_from_template(img,
                                                                  templ)
                 if find:
                     position = self.best_position(
-                        self, img, templateFind, objet['Count'])
+                        img, templateFind, objet['Count'])
                     h, w = templ.shape
                     for i in range(len(position)):
                         position[i] = position[i] + (h, w)
                     diction[planeName][objet['Category']] += position
+
+    def show_seats_find(self, image_rgb, json=None, img_name=None):
+        """
+        input:
+            image : Opened image with color
+            json : coordonate
+            img_name : image name
+        output:
+            NONE
+        """
+        color = {'BUSINESS': (255, 0, 0),
+                 'ECONOMY': (0, 0, 255),
+                 'FIRST': (0, 255, 0),
+                 'PREMIUM': (255, 255, 0)}
+
+        for category in json[img_name].keys():
+            for pos in json[img_name][category]:
+                cv2.rectangle(
+                    image_rgb, pos[0:2], (pos[0] + pos[3], pos[1] + pos[2]),
+                    color[category], 2)
+
+        cv2.imshow(img_name, image_rgb)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
+
+
+nbSeat = {'Aer_Lingus_Airbus_A330-300_A_plane6.jpg': [{'Category': 'BUSINESS',
+                                                       'Seat_Type': 'FLAT_BED',
+                                                       'Count': 30},
+                                                      {'Category': 'ECONOMY',
+                                                       'Seat_Type': 'STANDARD',
+                                                       'Count': 287}],
+          'Aer_Lingus_Airbus_A330-200_B_plane7.jpg': [{'Category': 'ECONOMY',
+                                                       'Seat_Type': 'STANDARD',
+                                                       'Count': 248},
+                                                      {'Category': 'BUSINESS',
+                                                       'Seat_Type': 'FLAT_BED',
+                                                       'Count': 23}],
+          'Aer_Lingus_Airbus_A320_plane9.jpg': [{'Category': 'ECONOMY',
+                                                 'Seat_Type': 'STANDARD',
+                                                 'Count': 174}],
+          'Aer_Lingus_Airbus_A321_plane10.jpg': [{'Category': 'ECONOMY',
+                                                  'Seat_Type': 'STANDARD',
+                                                  'Count': 212}],
+          'Aer_Lingus_Boeing_757-200_plane2.jpg': [{'Category': 'BUSINESS',
+                                                    'Seat_Type': 'FLAT_BED',
+                                                    'Count': 12},
+                                                   {'Category': 'ECONOMY',
+                                                    'Seat_Type': 'STANDARD',
+                                                    'Count': 165}],
+          'Aer_Lingus_Airbus_A330-200_plane6.jpg': [{'Category': 'ECONOMY',
+                                                     'Seat_Type': 'STANDARD',
+                                                     'Count': 248},
+                                                    {'Category': 'BUSINESS',
+                                                     'Seat_Type': 'FLAT_BED',
+                                                     'Count': 23}],
+          'Aer_Lingus_Airbus_A330-200_plane4.jpg': [{'Category': 'ECONOMY',
+                                                     'Seat_Type': 'STANDARD',
+                                                     'Count': 248},
+                                                    {'Category': 'BUSINESS',
+                                                     'Seat_Type': 'FLAT_BED',
+                                                     'Count': 23}],
+          'Aer_Lingus_Airbus_A330-300_A_plane8.jpg': [{'Category': 'BUSINESS',
+                                                       'Seat_Type': 'FLAT_BED',
+                                                       'Count': 30},
+                                                      {'Category': 'ECONOMY',
+                                                       'Seat_Type': 'STANDARD',
+                                                       'Count': 287}],
+          'Aer_Lingus_Airbus_A330-200_B_plane5.jpg': [{'Category': 'ECONOMY',
+                                                       'Seat_Type': 'STANDARD',
+                                                       'Count': 248},
+                                                      {'Category': 'BUSINESS',
+                                                       'Seat_Type': 'FLAT_BED',
+                                                       'Count': 23}],
+          'Aer_Lingus_Airbus_A321_plane1.jpg': [{'Category': 'ECONOMY',
+                                                 'Seat_Type': 'STANDARD',
+                                                 'Count': 212}],
+          'Aer_Lingus_Boeing_757-200_plane11.jpg': [{'Category': 'BUSINESS',
+                                                     'Seat_Type': 'FLAT_BED',
+                                                     'Count': 12},
+                                                    {'Category': 'ECONOMY',
+                                                     'Seat_Type': 'STANDARD',
+                                                     'Count': 165}]}
+
+# nbSeat = {}
+plane_name = 'Aer_Lingus_Boeing_757-200_plane11.jpg'
+img_gray = cv2.imread('../All Data/ANALYSE IMAGE/LAYOUT SEATGURU/' +
+                      plane_name, 0)
+img_rgb = cv2.imread('../All Data/ANALYSE IMAGE/LAYOUT SEATGURU/' +
+                     plane_name, 1)
+
+result = {plane_name: {}}
+test = SeatFinder()
+test.run(img_gray, nbSeat[plane_name], result, plane_name)
+test.show_seats_find(img_rgb, json=result, img_name=plane_name)
+print(result)
+
+# for i in result[plane_name].values():
+#     for j in i:
+#         cv2.rectangle(img_rgb, j[0:2], (j[0] + j[3],
+#                                         j[1] + j[2]), (0, 0, 255), 2)
+# cv2.imshow('TEST', img_rgb)
+# cv2.waitKey()
+# cv2.destroyAllWindows()
