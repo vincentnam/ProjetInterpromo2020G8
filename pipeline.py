@@ -926,8 +926,8 @@ class SegmentationZone(Process):
 
             for pos in position:
                 # Draw rectangle around recognized element
-                cv.rectangle(
-                    image, pos, (pos[0] + w, pos[1] + h), (255, 255, 255), 2)
+                # cv.rectangle(
+                #     image, pos, (pos[0] + w, pos[1] + h), (255, 255, 255), 2)
 
                 for rect in json[image_name]['rectangles']:
 
