@@ -594,7 +594,7 @@ class Pipeline:
                 post_pro = post_process()
                 try:
                     print("Doing : " + post_pro.process_desc)
-                    post_pro.run(self.json, **kwargs)
+                    post_pro.run(self.json,image_name = image_name, **kwargs)
                 except Exception as e:
                     traceback.print_tb(e.__traceback__)
                     print("Le processing numéro " + str(num)
@@ -870,6 +870,41 @@ if __name__ == "__main__":
 # print(pipeline.json)
 # pipeline.run_pipeline(1, planes_data_csv=None, plane_name="Aer_Lingus_Airbus_A330-300_A_plane6.jpg", csv_data_path="/data/dataset/projetinterpromo/Interpromo2020")
 
+class ColourPipelineSeat(Preprocess):
+    process_desc = "Standard Python >= 3.5 -> preprocess colours"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def run(self, **kwargs) -> Iterable:
+        return self.col_obj.colour_pipeline(colours={}, epsilon=40,
+                                            colour_mode=False,
+                                            default_colour=[255, 255, 255],
+                                            rgb_len=3)
+
+
+class BlackWhite(Preprocess):
+    process_desc = "OpenCV4.1.2.30 -> rgb to grey"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def run(self, **kwargs) -> Iterable:
+        return self.col_obj.util_obj.to_gray()
+
+
+class ColourPipelineZones(Preprocess):
+    process_desc = "Standard Python >= 3.5 -> preprocess colours"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def run(self, **kwargs) -> Iterable:
+        return self.col_obj.colour_pipeline(colours={}, epsilon=30,
+                                            colour_mode=True,
+                                            default_colour=[0, 0, 0],
+                                            rgb_len=3).astype('uint8')
+
 
 class SegmentationZone(Process):
     process_desc = "OpenCV4.1.2.30 / Scikit-image 0.16-> segmentation over colour areas"
@@ -965,8 +1000,8 @@ class SegmentationZone(Process):
         return image_detection_result
 
     def coord_template_matching_image_single(self, image, json, liste_temp,
-                                             path_temp, image_name,threshold,
-                                             limit_area = 80):
+                                             path_temp, image_name, threshold,
+                                             limit_area=80):
         # liste_temp : list of templates
         # path_temp : path to access the list of templates
         # image_name : image
@@ -980,10 +1015,9 @@ class SegmentationZone(Process):
 
         # Pre-process the image
 
-
         # Image rgb to gray
 
-        dict_data = self.image_detection_result(image_name,image, 80)
+        dict_data = self.image_detection_result(image_name, image, 80)
 
         # Initialize dictionnary of templates type for the image
         type_temp = {}
@@ -1020,10 +1054,21 @@ class SegmentationZone(Process):
         return temp_rcgnzd
 
     def run(self, image, json, image_rgb=None, col_obj=None, templates=None,
-            data_image=None, **kwargs) -> None:
+            data_image=None, image_name=None, **kwargs) -> None:
         plt.imshow(image)
         plt.show()
         self.label_results(image, json, data_image)
-        self.coord_template_matching_image_single(image, json,  "./images/zone_templates/",
-                                             0.5, 80)
+        temp_zone_fold_path = "./images/zone_templates/"
+        list_temp = [name_template for name_template in
+                     os.listdir(temp_zone_fold_path)]
+        self.coord_template_matching_image_single(image, json,
+                                                  image_name=image_name,
+                                                  liste_temp=list_temp,
+                                                  path_temp=temp_zone_fold_path,
+                                                  threshold=0.5)
 
+
+pipeline_zone = Pipeline("/data/dataset/projetinterpromo/Interpromo2020/","Aer_Lingus_Airbus_A330-300_A_plane6.jpg")
+
+pipeline_zone.add_processes([ColourPipelineZones, BlackWhite,SegmentationZone])
+pipeline_zone.run_pipeline(1)
