@@ -4,12 +4,21 @@ Group 8
 @authors: DANG Vincent-Nam
 """
 
+# TODO :
+#  - Tests unitaires et tests intégrations : test pipeline
+#  (run_pipeline), levées d'erreur, etc...
+#  - Traduire les commentaires en anglais (si besoin ?)
+#  - Mettre à jour le pipeline pour prendre en compte des resultats
+#    auxiliaires nécessaire pour le traitement suivant
+#  - Gestion des hints plus formellement
+#  - Gestion de l'héritage des docstrings
+#  - Gestion des preprocess sur les templates
 from abc import ABCMeta, abstractmethod
 from typing import Iterable
 import sys
 import inspect
 import re
-
+import traceback
 import os
 import cv2 as cv
 import matplotlib.pyplot as plt
@@ -132,15 +141,6 @@ def overrides(method):
 
     assert(any(hasattr(cls, method.__name__) for cls in base_classes))
     return method
-
-# TODO :
-#  - Tests unitaires et tests intégrations : test pipeline
-#  (run_pipeline), levées d'erreur, etc...
-#  - Traduire les commentaires en anglais (si besoin ?)
-#  - Mettre à jour le pipeline pour prendre en compte des resultats
-#    auxiliaires nécessaire pour le traitement suivant
-#  - Gestion des hints plus formellement
-#  - Gestion de l'héritage des docstrings
 
 
 class ImageUtil():
@@ -450,11 +450,14 @@ class Pipeline:
     fonction add_pre_process
     """
 
-    def __init__(self, data_path, list_images_name: Iterable[str], layouts: Iterable[str] = ['LAYOUT SEATGURU', 'LAYOUT SEATMAESTRO']) -> None:
+    def __init__(self, data_path, list_images_name: Iterable[str],
+                 layouts: Iterable[str] =
+                 ['LAYOUT SEATGURU', 'LAYOUT SEATMAESTRO']) -> None:
         self.pre_process: Iterable[type] = np.array([])
         self.process: Iterable[type] = np.array([])
         self.post_process: Iterable[type] = np.array([])
         self.json = {}
+        self.list_images_name = list_images_name
 
         # definition of input path for images
         # data_path : path to Interpromo2020
@@ -462,7 +465,6 @@ class Pipeline:
         # data_path : list of layouts folders names
         self.layouts = layouts
         self.csv_path = data_path + "All Data/"
-        self.list_images_name = list_images_name
         self.layout_folder_path = self.csv_path + "ANALYSE IMAGE/"
         self.image_folder_path = self.layout_folder_path + layouts[0] +"/"
 
@@ -557,6 +559,7 @@ class Pipeline:
                     plt.imshow(col_obj.image)
                     plt.show()
                 except Exception as e:
+                    traceback.print_tb(e.__traceback__)
                     print("Le pré-processing numéro " + str(num)
                           + "( " + pre_pro.process_desc
                           + " ) a levé une erreur.")
@@ -578,6 +581,7 @@ class Pipeline:
                     else:
                         raise ValueError("Image = None")
                 except Exception as e:
+                    traceback.print_tb(e.__traceback__)
                     print("Le processing numéro " + str(num)
                           + "( " + pro.process_desc + " ) a levé une erreur.")
                     exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -592,8 +596,10 @@ class Pipeline:
                     print("Doing : " + post_pro.process_desc)
                     post_pro.run(self.json, **kwargs)
                 except Exception as e:
-                    print("Le post_processing numéro " + str(num)
-                          + " a levé une erreur.")
+                    traceback.print_tb(e.__traceback__)
+                    print("Le processing numéro " + str(num)
+                          + "( " + post_pro.process_desc
+                          + " ) a levé une erreur.")
                     exc_type, exc_obj, exc_tb = sys.exc_info()
                     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[
                         1]
@@ -794,3 +800,72 @@ if __name__ == "__main__":
     pipeline.run_pipeline([])
     print(Augmentation.run.__doc__)
 '''
+#
+# class RemoveDouble(Postprocess):
+#     process_desc = "Standard Python >= 3.5 -> remove double point in list"
+#     def __init__(self, *args, **kwargs):
+#         super().__init__()
+#     def remove_duplicate(self,coordinate: list):
+#         """Documentation
+#         Parameters:
+#             coordinate: original coordinates without treatment
+#         Out:
+#             dup: list of coordinate which are duplicated
+#         """
+#         dup = []
+#         print(coordinate)
+#         for point1 in coordinate:
+#             for point2 in coordinate:
+#                 if point2 != point1 and point1 not in dup:
+#                     if ((abs(point1[0] - point2[0]) <= 5) and (abs(point1[1] - point2[1]) <= 5)):
+#                         dup.append(point2)
+#         for d in dup:
+#             if d in coordinate:
+#                 coordinate.remove(d)
+#         return(coordinate)
+#
+#     def run(self, json, **kwargs):
+#         for seat_index in json:
+#             json[seat_index] = self.remove_duplicate(json[seat_index])
+#
+#
+# class ColourPipelineSeat(Preprocess):
+#     process_desc = "Standard Python >= 3.5 -> preprocess colours"
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#
+#     def run(self, **kwargs) -> Iterable:
+#         return self.col_obj.colour_pipeline(colours={}, epsilon=40,
+#                                             colour_mode=False,
+#                                             default_colour=[255, 255, 255],
+#                                             rgb_len=3)
+#
+#
+# class BlackWhite(Preprocess):
+#     process_desc = "OpenCV4.1.2.30 -> rgb to grey"
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#
+#     def run(self, **kwargs) -> Iterable:
+#         return self.col_obj.util_obj.to_gray()
+#
+#
+# class ColourPipelineZones(Preprocess):
+#     process_desc = "Standard Python >= 3.5 -> preprocess colours"
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#
+#     def run(self, **kwargs) -> Iterable:
+#         return self.col_obj.colour_pipeline(colours={}, epsilon=30,
+#                                             colour_mode=True,
+#                                             default_colour=[0, 0, 0],
+#                                             rgb_len=3)
+#
+#
+# pipeline = Pipeline("/data/dataset/projetinterpromo/Interpromo2020/","Aer_Lingus_Airbus_A330-300_A_plane6.jpg")
+# pipeline.add_processes([BlackWhite,SeatFinder, RemoveDouble])
+# print(pipeline.json)
+# pipeline.run_pipeline(1, planes_data_csv=None, plane_name="Aer_Lingus_Airbus_A330-300_A_plane6.jpg", csv_data_path="/data/dataset/projetinterpromo/Interpromo2020")
