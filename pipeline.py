@@ -1012,7 +1012,7 @@ class SegmentationZone(Process):
 
         # Initialize the dictionnary which will display the results
         temp_rcgnzd = {}
-
+        #print(json[image_name])
         # Pre-process the image
 
         # Image rgb to gray
@@ -1051,7 +1051,10 @@ class SegmentationZone(Process):
 
             temp_rcgnzd[image_name] = type_temp
 
-        return temp_rcgnzd
+        json[image_name]= temp_rcgnzd[image_name]
+
+
+
 
     def run(self, image, json, image_rgb=None, col_obj=None, templates=None,
             data_image=None, image_name=None, **kwargs) -> None:
@@ -1061,6 +1064,7 @@ class SegmentationZone(Process):
         temp_zone_fold_path = "./images/zone_templates/"
         list_temp = [name_template for name_template in
                      os.listdir(temp_zone_fold_path)]
+        print(list_temp)
         self.coord_template_matching_image_single(image, json,
                                                   image_name=image_name,
                                                   liste_temp=list_temp,
@@ -1072,3 +1076,4 @@ pipeline_zone = Pipeline("/data/dataset/projetinterpromo/Interpromo2020/","Aer_L
 
 pipeline_zone.add_processes([ColourPipelineZones, BlackWhite,SegmentationZone])
 pipeline_zone.run_pipeline(1)
+print(pipeline_zone.json)
