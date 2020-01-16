@@ -869,3 +869,166 @@ if __name__ == "__main__":
 # pipeline.add_processes([BlackWhite,SeatFinder, RemoveDouble])
 # print(pipeline.json)
 # pipeline.run_pipeline(1, planes_data_csv=None, plane_name="Aer_Lingus_Airbus_A330-300_A_plane6.jpg", csv_data_path="/data/dataset/projetinterpromo/Interpromo2020")
+
+
+class SegmentationZone(Process):
+    process_desc = "OpenCV4.1.2.30 / Scikit-image 0.16-> segmentation over colour areas"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def image_process_label(self, image):
+        # grayscale = rgb2gray(image)
+        thresh = threshold_otsu(image)
+        bw = closing(image > thresh, square(2))
+        cleared = clear_border(bw)
+        label_image = label(cleared)
+        return label_image
+
+    def label_results(self, image, json, data_image=None,
+                      min_rectangle_area=80):
+        # the result will be store in this list
+        image_detection_result = []
+        if data_image is None:
+            print("Data_image is None")
+        # get the image
+
+        # get the different area
+        label_image = self.image_process_label(image)
+        props = regionprops(label_image)
+
+        # prepare the image info
+        json[data_image.split('/')[-1]] = {"areas": [], "rectangles": [],
+                                           "diameters": [], "coordinates": []}
+        #         image_detection_result.append({
+        #             'image_name': image_path.split('/')[-1],
+        #             "areas": [],
+        #             "rectangles": [],
+        #             "diameters": [],
+        #             "coordinates": []
+        #         })
+
+        # the last index in the list
+        len_list = len(image_detection_result) - 1
+
+        # by region find every rectangle that will interesting us
+        for region in props:
+            # bigger enough area chosen
+            if region.area >= min_rectangle_area:
+                json[data_image.split('/')[-1]]['areas'].append(region['Area'])
+                json[data_image.split('/')[-1]]['rectangles'].append(
+                    region['BoundingBox'])
+                json[data_image.split('/')[-1]]['diameters'].append(
+                    region['EquivDiameter'])
+                json[data_image.split('/')[-1]]['coordinates'].append(
+                    region['Coordinates'])
+
+    def image_detection_result(self, image_name,
+                               data_path, layouts, im_gray, im_pre,
+                               limit_area):
+        # image_name : image chosen
+        # data_path : path to access those images
+        # layouts : seatguru or seatmaestro
+        # limit_area : minimum dimension area, 80 by default
+
+        # the result will be store in this list
+        image_detection_result = []
+
+        # detect the regions of an image
+        label_image = image_process_label(im_pre)
+        props = regionprops(label_image)
+
+        # prepare the image info
+        image_detection_result.append({
+            'image_name': image_name,
+            "areas": [],
+            "rectangles": [],
+            "diameters": [],
+            "coordinates": []
+        })
+
+        # the last index in the list
+        len_list = len(image_detection_result) - 1
+
+        # by region find every rectangle that will interesting us
+        for region in props:
+
+            # bigger enough area chosen
+            if region.area >= limit_area:
+                image_detection_result[len_list]['areas'].append(
+                    region['Area'])
+                image_detection_result[len_list]['rectangles'].append(
+                    region['BoundingBox'])
+                image_detection_result[len_list]['diameters'].append(
+                    region['EquivDiameter'])
+                image_detection_result[len_list]['coordinates'].append(
+                    region['Coordinates'])
+
+        return image_detection_result
+
+    def coord_template_matching_image_single(self, liste_temp, path_temp, image_name,
+                                             data_path, layouts, threshold,
+                                             limit_area):
+        # liste_temp : list of templates
+        # path_temp : path to access the list of templates
+        # image_name : image
+        # data_path : path to access the image
+        # layouts : list of layouts
+        # threshold : chosen, by default 0.9
+        # limit_area : minimum dimension area, 80 by default
+
+        # Initialize the dictionnary which will display the results
+        temp_rcgnzd = {}
+
+        # Pre-process the image
+        im_pre = preprocess_couleur(data_path, layouts, image_name)
+
+        # Image rgb to gray
+        im_gray = cv.cvtColor(im_pre, cv.COLOR_RGB2GRAY)
+
+        dict_data = image_detection_result(image_name,
+                                           data_path, layouts, im_gray, im_pre)
+
+        # Initialize dictionnary of templates type for the image
+        type_temp = {}
+
+        for templ in liste_temp:
+            # Initialize list of (all) coordinates for each recognized template
+            liste_position = []
+            # Open template
+            template = cv.imread(path_temp + templ, 0)
+            h, w = template.shape
+
+            # List of match
+            res = cv.matchTemplate(im_gray, template, cv2.TM_CCOEFF_NORMED)
+
+            position = [pos for pos in zip(*np.where(res >= threshold)[::-1])]
+
+            for pos in position:
+                # Draw rectangle around recognized element
+                cv2.rectangle(
+                    im_gray, pos, (pos[0] + w, pos[1] + h), (255, 255, 255), 2)
+
+                for rect in dict_data[0]['rectangles']:
+
+                    if pos[0] > rect[1] and pos[0] < rect[3] and pos[1] > rect[
+                        0] and pos[1] < rect[2]:
+
+                        if rect not in liste_position:
+                            liste_position.append(rect)
+
+            type_temp[templ] = (liste_position)
+
+            temp_rcgnzd[image_name] = type_temp
+
+        return temp_rcgnzd
+
+    def run(self, image, json, image_rgb=None, col_obj=None, templates=None,
+            data_image=None, **kwargs) -> None:
+        plt.imshow(image)
+        plt.show()
+        self.label_results(image, json, data_image)
+        self.coord_template_matching_image_single(liste_temp, path_list_temp,
+                                             image_name, data_path, layouts,
+                                             0.5, 80)
+
