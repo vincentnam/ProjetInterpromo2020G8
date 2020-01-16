@@ -129,8 +129,7 @@ COLOURS = {
             "exit": [222, 111, 100],
             "green": [89, 185, 71],
             "red_bad_seat": [244, 121, 123],
-            "blue_seat_crew": [140, 169, 202],
-            "baby": [184, 214, 240]
+            "blue_seat_crew": [140, 169, 202]
         },
         'png': {
             "blue": [41, 182, 209],
@@ -138,8 +137,7 @@ COLOURS = {
             "exit": [190, 190, 190],
             "green": [41, 209, 135],
             "red_bad_seat": [226, 96, 82],
-            "blue_seat_crew": [41, 182, 209],
-            "baby": [197, 197, 197]
+            "blue_seat_crew": [41, 182, 209]
         }
     },
     'LAYOUT SEATMAESTRO': {
