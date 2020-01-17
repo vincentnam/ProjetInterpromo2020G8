@@ -987,7 +987,7 @@ class Postprocess(MetaProcess):
         pass
 
 
-class RemoveDouble(Postprocess):
+class RemoveDoubleSeat(Postprocess):
     process_desc = "Standard Python >= 3.5 -> remove double point in list"
 
     def __init__(self, *args, **kwargs):
@@ -1000,18 +1000,22 @@ class RemoveDouble(Postprocess):
         Out:
             dup: list of coordinate which are duplicated
         """
-        dup = []
-        print(coordinate)
-        for point1 in coordinate:
-            for point2 in coordinate:
-                if point2 != point1 and point1 not in dup:
-                    if ((abs(point1[0] - point2[0]) <= 5) and (
-                            abs(point1[1] - point2[1]) <= 5)):
-                        dup.append(point2)
+        dup = {}
+
+        for category in coordinate:
+            dup[category] = []
+            for point1 in coordinate[category]:
+                for point2 in coordinate[category]:
+                    if point2 != point1 and point1 not in dup:
+                        if ((abs(point1[0] - point2[0]) <= 5) and (
+                                abs(point1[1] - point2[1]) <= 5)):
+                            dup[category].append(point2)
         for d in dup:
-            if d in coordinate:
-                coordinate.remove(d)
-        return (coordinate)
+            for category in coordinate:
+                if d in coordinate[category]:
+                    coordinate.remove(d)
+
+        return coordinate
 
     def run(self, json, **kwargs):
         for seat_index in json:
@@ -1304,10 +1308,37 @@ class DistPipeline:
 
 
 
-# pipeline_zone = Pipeline("/data/dataset/projetinterpromo/Interpromo2020/",["Aer_Lingus_Airbus_A330-300_A_plane6.jpg"])
+pipeline = Pipeline("/data/dataset/projetinterpromo/Interpromo2020/",["Aer_Lingus_Airbus_A330-300_A_plane6.jpg"])
 #
-# pipeline_zone.add_processes([BlackWhite,SeatFinder, RemoveDouble])
-# pipeline_zone.run_pipeline(1)
+pipeline.add_processes([BlackWhite,SeatFinder, RemoveDoubleSeat])
+pipeline.run_pipeline(1)
+
+
+def show_seats_find(image_rgb, json=None, img_name=None):
+    """
+    input:
+        image : Opened image with color
+        json : coordonate
+        img_name : image name
+    output:
+        NONE
+    """
+    color = {'BUSINESS': (255, 0, 0),
+             'ECONOMY': (0, 0, 255),
+             'FIRST': (0, 255, 0),
+             'PREMIUM': (255, 255, 0)}
+
+    for category in json[img_name]:
+        for pos in json[img_name][category]:
+            cv.rectangle(
+                image_rgb, pos[0:2], (pos[0] + pos[3], pos[1] + pos[2]),
+                color[category], 2)
+
+    plt.imshow(image_rgb)
+    plt.show()
+show_seats_find(plt.imread("/data/dataset/projetinterpromo/Interpromo2020/"
+                           "All Data/ANALYSE IMAGE/LAYOUT SEATGURU/Aer_Lingus_Airbus_A330-300_A_plane6.jpg"),
+                pipeline.json, "Aer_Lingus_Airbus_A330-300_A_plane6.jpg" )
 # print(pipeline_zone.json)
 #
 #
