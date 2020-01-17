@@ -1,12 +1,41 @@
 # ProjetInterpromo2020G8
 Groupe 8 private repository : prediction cabines
 
+Look at "Exemple_notebook.ipynb" for exemple. 
+# How to make process : 
+How to run the solution (with minimum parameters):
+ - pipeline = Pipeline(data_path)
+ - pipeline.add_processes([list_of_processes])
 
+Pipeline out is a dictionary (in a json format) :
+
+ - print(pipeline.json)
+
+Output format is :
+ - Seat json output : { "image.png" : { "seat_type" : [ (x1,y1,h1,w1), (x2,y2,h2,w2),...] }
+ - Element json output : { "image.png" : { "element_type" : [(x1,y1,h1,w1), (x2,y2,h2,w2),...] } }
+
+This contains multiple image in same dictionnary.
+
+Exemple_notebook.ipynb is an exemple the solution running over multiple images. Visualisation and statistics are plot in.
+
+Be careful, data has to follow the archive architecture as : "Interpromo2020/All data/ANALYSE IMAGE/". In the "ANALYSE IMAGE" folder, there are folder for each type of layouts.
+# How to run distances computation : 
+
+To compute distances, another pipeline is defined : DistPipeline :
+ - dist_pipeline = Distpipeline(pipeline_seat, pipeline_zone)
+ - new_json = dist_pipeline.to_json_simple_distance(dist_pipeline.pipeline.json, dist_pipeline.pipeline_zone.json)
+
+The new json format is : {"image.png" : {"type_seat" : { (x_seat,y_seat,h,w) : { "type_elem": { (x_elem, y_elem, h, w) : distance,... } }
+}  }  }
+
+It contains for each image, for each seat, for each element the distance of the seat to the element.
+#
 Documentaiton Deep Learning : https://docs.google.com/document/d/1Pht0gxAkobEJzD24B42Fu_TzKjeq6rgOsKi-l9-fEvM/edit?usp=sharing
 
 
 # ATTENTION : 
-## Chacun doit maintenant travailler sur sa propre branche. Pour se faire, il faut changer de branche et passer sur la branche qui correspond. Les branches sont nommés par prénom (ex : branche "Vincent-Nam"). Pour changer de branche il faut utiliser la commande "git checkout" suivi du nom de la branche (ex : git checkout Vincent-Nam)
+## Chacun doit travailler sur sa propre branche. Pour se faire, il faut changer de branche et passer sur la branche qui correspond. Les branches sont nommés par prénom (ex : branche "Vincent-Nam"). Pour changer de branche il faut utiliser la commande "git checkout" suivi du nom de la branche (ex : git checkout Vincent-Nam)
 ##Pour visualiser la liste des branches : git branch -v 
 Lien du document drive décrivant un peu le projet : https://docs.google.com/document/d/1bfkXWvkYrwYwVtkSgcScX5hb6XGzKLVn_2sqA2HXyDo/edit?usp=sharing
 # Légende des plans : 
@@ -30,24 +59,24 @@ Lien du document drive décrivant un peu le projet : https://docs.google.com/doc
 - [x]  Choix des modèles de données : 
     - [x] Sortie de process
     - [x] Sortie de post-process 
-- [ ]  Formalisation des modèles de données 
-    - [ ] Sortie de process
-    - [ ] Sortie de post process 
+- [x]  Formalisation des modèles de données 
+    - [x] Sortie de process
+    - [x] Sortie de post process 
 - [x]  Localisation des sièges
     - [x] Pattern matching pour les sièges de SeatGuru
     - [ ] Pattern matching pour les sièges de SeatMaestro
 - [x]  Localisation des autres éléments constituants des plans
     - [x] Pattern matching (NON) -> Segmentation pour les éléments de SeatGuru
     - [ ] Pattern matching pour les éléments de SeatMaestro
-- [ ]  Validation des résultats 
+- [x]  Validation des résultats 
 
 #### - Post-traitement des informations : 
-- [ ]  Valorisation des résultats
+- [x]  Valorisation des résultats
 - [x]  Correction des prédictions 
     - [x] Alignement 
-    - [ ] Clustering
-- [ ]  Mise en forme des résultats  
-- [ ]  Distance des sièges par rapport aux autres éléments
+    - [x] Clustering
+- [x]  Mise en forme des résultats  
+- [x]  Distance des sièges par rapport aux autres éléments
     - [ ] Transformation des plans sous forme de grille 
 
  
