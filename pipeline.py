@@ -3,7 +3,7 @@ Created on Fri Jan 3 13:28:13 CET 2019
 Group 8
 @authors: DANG Vincent-Nam
 """
-from __future__ import print_function
+
 # TODO :
 #  - Tests unitaires et tests intégrations : test pipeline
 #  (run_pipeline), levées d'erreur, etc...
@@ -19,17 +19,6 @@ import sys
 import inspect
 import re
 import traceback
-import os
-import cv2 as cv
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-
-from collections import defaultdict
-from PIL import Image
-
-
-import matplotlib.pyplot as plt
 
 import os
 import cv2 as cv
@@ -38,37 +27,26 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 from PIL import Image
-
-import sklearn
-from sklearn.cluster import DBSCAN
-
-
-import os
-import cv2 as cv
-import matplotlib.pyplot as plt
-import numpy as np
-import numpy as np
-import pandas as pd
-from collections import defaultdict
-from PIL import Image
-
-from matplotlib import image
-import matplotlib.patches as mpatches
 from matplotlib import patches
-from skimage import io
-import skimage.segmentation as seg
+
 from skimage.segmentation import clear_border
-import skimage.filters as filters
+
 from skimage.filters import threshold_otsu
-import skimage.draw as draw
-import skimage.color as color
-from skimage.color import label2rgb
+
 from skimage.measure import label, regionprops
 from skimage.morphology import closing, square
 import sklearn
 from sklearn.cluster import DBSCAN
 
+
 def overrides(method):
+    """
+    Decorator implementation for overriding
+    Come frome : https://stackoverflow.com/questions/1167617/
+    in-python-how-do-i-indicate-im-overriding-a-method
+    :param method: the method to overrides
+    :return: the proper version of the method
+    """
     # actually can't do this because a method is really
     # just a function while inside a class def'n
     # assert(inspect.ismethod(method))
@@ -98,29 +76,31 @@ def overrides(method):
             obj = derived_class_locals[components[0]]
 
             for c in components[1:]:
-                assert(inspect.ismodule(obj) or inspect.isclass(obj))
+                assert (inspect.ismodule(obj) or inspect.isclass(obj))
                 obj = getattr(obj, c)
 
             base_classes[i] = obj
 
-    assert(any(hasattr(cls, method.__name__) for cls in base_classes))
+    assert (any(hasattr(cls, method.__name__) for cls in base_classes))
     return method
+
 
 class NotProcessClass(Exception):
     def __init__(self, expression, message):
         """
-        Classe d'exception pour indiquer qu'autre chose qu'un process a
-        été rajouté dans le pipeline.
+        Exception class to handle problem of object insertion in
+        pipeline
         Attributes:
-            process_desc -- description du process
-            process_class -- class du process
+            process_desc -- process descrition to print
+            process_class -- process class to print
         """
         self.expression = expression
         self.message = message
 
 
-
-
+# Global variable : colors dictionnary for layout : used by colors
+# preprocess - to determine wich colors has to be kept has element
+# color in the image
 COLOURS = {
     'LAYOUT SEATGURU': {
         'jpg': {
@@ -152,9 +132,20 @@ COLOURS = {
 }
 
 
+class ImageUtil:
+    """
+    Tool class for preprocessing : contains method for image
+    transformation as rgb to gray
+    """
 
-class ImageUtil():
     def __init__(self, input_path, image_name, image=None):
+        """
+        Constructor for ImageUtil class ; used in colour class as a
+        class attribute. Image is open only if image is None.
+        :param input_path: str : path to the image to load
+        :param image_name: str : image name (file name)
+        :param image: Iterable : image loaded
+        """
         self.input_path = input_path
         self.image_name = image_name
         if image is None:
@@ -169,6 +160,10 @@ class ImageUtil():
 
     # Setter for image updating
     def set_image(self, image):
+        """
+        Setter for image parameter
+        :param image: image to set
+        """
         self.image_pil = image
         self.image_plt = image
         self.image = image
@@ -220,18 +215,53 @@ class ImageUtil():
                    self.image_plt.astype('uint8'))
 
 
-class Colour():
+class Colour:
+    """
+    Tool class : used to make transformations over images
+    """
 
-    def __init__(self, input_path, layout, image_name):
-        self.input_path = input_path
+    def __init__(self, csv_data_path, layout, image_name):
+        """
+        Constructor for Colour class ; tool box for image preprocessing.
+        Can be extended to add preprocesses easily.
+        :param csv_data_path: str : input path to the base folder
+        containing the csv. Folder architecture is based on the archive
+        given at the project beginning (i.e. "ProjetInterpromo2020"
+        containing sub folder :  "All\ Data" -> "ANALYSE\ IMAGE/" and
+        sub folder with the layout from website.
+        :param layout: Iterable[str] : list of layout to process /
+        list of str that are folders name.
+        :param image_name: str : file name of the image to work on
+        """
+
+        # Path of the base folder containing all sub folder : sub-folder
+        # created after unzipping the archive containing all CSV
+        self.csv_data_path = csv_data_path
+        # Path of the folder containing layout folder :
+        # sub folder of "ALL DATA"
+        self.layout_folder_path = csv_data_path + "ANALYSE IMAGE/"
+        # Path to the seatguru folder containing all layouts
+        self.seatguru_image_data_path = self.layout_folder_path \
+                                        + "LAYOUT SEATGURU/"
+        # Path to the seatmaestro folder containing all layouts
+        self.seatmaestro_image_data_path = self.layout_folder_path \
+                                           + "LAYOUT SEATMAESTRO/"
+
+        # Redundant variable : only used to keep function calling
+        self.input_path = self.csv_data_path
+        # List of layout
         self.layout = layout
+        # File image name preprocessed
         self.image_name = image_name
+        # File image extension : images graphic charts are
+        # differentiated by extension in our dataset.
         self.image_extension = image_name.split('.')[-1]
-
+        # Reading of the image with matplotlib
         self.image = plt.imread(
             self.input_path + self.layout + '/' + self.image_name)
+        # Creating an ImageUtil object used for preprocessing
         self.util_obj = ImageUtil(self.input_path + self.layout + '/',
-                                    self.image_name)
+                                  self.image_name)
 
     # Setter for image update on preprocess
     def set_image(self, image):
@@ -289,12 +319,15 @@ class Colour():
     def colour_pipeline(self, colours={}, epsilon=20, colour_mode=True,
                         default_colour=[0, 0, 0], rgb_len=3):
         """
-            Call colour_detection function in order to pre-process colours in image
+            Call colour_detection function in order to pre-process
+            colours in image.
             params :
-                colours : a dictionnary with a list of specified colours
-                epsilon : threshold that allows to consider a colour from another one as close
-                rgb_len : only take the 3 first elements from pixel (RGB norm)
-                colour_mode :
+                colours : dict : a dictionnary with a list of specified colours
+                epsilon : int : threshold that allows to consider a colour
+                from another one as close
+                rgb_len : List :  only take the 3 first elements from pixel
+                (RGB norm)
+                colour_mode : bool :
                     - if true (highlight colours in "colours" dict by standardize it) : it means that
                     if we consider a colour from the image close to a colour from the "colours" dict,
                     then it will replace the colour by the one in the dict.
@@ -304,7 +337,7 @@ class Colour():
                 default_color : default color value that a pixel has to take
         """
         # if colours is empty we take the default value
-        if not bool(colours): colours = COLOURS[self.layout][
+        if not bool(colours) : colours = COLOURS[self.layout][
             self.image_extension]
 
         # get the image result from colour detection pre-process wanted
@@ -314,29 +347,27 @@ class Colour():
         return image_res
 
 
-
-# Metaclasse pour les processus
 class MetaProcess(metaclass=ABCMeta):
     """
-    Metaclasse pour la definition d'un processus. Permet de définir le
-    comportement que doit avoir un processus pour fonctionner avec les
-    pipeline de travail (classe Pipeline).
+    Metaclass for process definition. Used to define a process behaviour
+    to be able to make a pipeline of processes. (Cf. Pipeline class)
     """
 
     def check_attributes(self):
         """
-        Attribut abstrait obligatoire permettant de définir une
-        description du process effectué affiché si la verbosité est
-        supérieure à 0.
-        Cet attribut doit décrire ce qui est réalisée par le process
-        et la librairie majoritairement utilisée pour réaliser ce
-        process ainsi que la version de cette bibliothèque s'il y a.
+        Check if attributes is defined and not empty. Raise an error
+        if not defined.
         """
         if self.process_desc is None or self.process_desc == "":
             raise NotImplementedError("Définissez une description pour "
                                       + "le process.")
 
-    def __init__(self, verbose=1,*args, **kwargs):
+    def __init__(self, verbose=1, *args, **kwargs):
+        """
+        MetaProcess constructor. Check if process_desc is implemented.
+        :param verbose: int : >0 implies a printing of process_desc
+        when called.
+        """
         self.verbose = verbose
         self.check_attributes()
         super().__init__()
@@ -347,46 +378,66 @@ class MetaProcess(metaclass=ABCMeta):
     @property
     @abstractmethod
     def process_desc(self):
-        """Name of the process to be able to identify the process"""
+        """
+        Abstract attribute defining a process definition. The process
+        description printing can be avoid by setting "verbose=0".
+        This attribute is used to describe the computation and the
+        major library used in the run (and the version).
+        """
         return self.process_desc
 
     @abstractmethod
     def run(self, image: Iterable, **kwargs) -> None:
         """
-        Réalise le traitement à effectuer sur la liste d'images. Ne
-        retourne rien. Les modifications sont effectuées directement sur
-        les images dans la liste.
-        :param image: image à traiter : objet array-like
+        Run function and do the computation of the class. This function
+        is used in pipeline and only this is launched in pipeline. Work
+        as a main and parameters are filled with **kwargs dictionnary.
+        :param image: image to process : objet array-like
         """
 
 
-# Classe abstraite pour les processus de pré-traitement de données
 class Preprocess(MetaProcess):
     """
-    Classe abstraite de définition d'un processus de pré-traitement des
-    données.
-    Pour définir un pré-traitement, il est nécessaire de définir une
-    classe héritant de cette classe (Preprocess). Il doit
-    obligatoirement être implémenté la fonction run(self,images) et
-    l'attribut process_desc (avec une valeur différente de None ou "").
+    Abstract class to define a preprocess.
+    To define a new proprocess, it is needed to define process
+    description and run function has to be implemented as the main
+    of the process.
+    The process_desc is used to describe libraries and the process
+    computations.
     Ex :
     class Preprocess_exemple(Proprocess):
-        process_desc = "OpenCV4.0 -> data augmentation : rotations"
-    ...
+        process_desc = "OpenCV4.1.2.30 -> data augmentation : rotations"
+
+        def run(self, image, **kwargs):
+            ...
     """
 
     process_desc = None
 
-    def __init__(self, col_obj,*args, **kwargs):
+    def __init__(self, col_obj, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Colour object containing the image to preprocess and
+        # may be already preprocessed.
         self.col_obj = col_obj
 
     @overrides
     @abstractmethod
     def run(self, **kwargs) -> Iterable:
+        """
+        Image is open in col_obj and preprocess are done on this image.
+        The col_obj is the same during all the pipeline and all
+        preprocess compute on this image.
+        :return : Iterable : image preprocessed to keep changes and set
+        the new image in the col_obj.
+        """
         pass
 
+
 class ColourPipelineSeat(Preprocess):
+    """
+    Pre process class for color preprocessing. Is used the col_obj to
+    transform colours of an image.
+    """
     process_desc = "Standard Python >= 3.5 -> preprocess colours"
 
     def __init__(self, *args, **kwargs):
@@ -398,7 +449,11 @@ class ColourPipelineSeat(Preprocess):
                                             default_colour=[255, 255, 255],
                                             rgb_len=3)
 
+
 class BlackWhite(Preprocess):
+    """
+    Transform colored image into a grey scale image.
+    """
     process_desc = "OpenCV4.1.2.30 -> rgb to grey"
 
     def __init__(self, *args, **kwargs):
@@ -409,6 +464,9 @@ class BlackWhite(Preprocess):
 
 
 class ColourPipelineZones(Preprocess):
+    """
+    Transform image colors.
+    """
     process_desc = "Standard Python >= 3.5 -> preprocess colours"
 
     def __init__(self, *args, **kwargs):
@@ -421,18 +479,19 @@ class ColourPipelineZones(Preprocess):
                                             rgb_len=3).astype('uint8')
 
 
-# Classe abstraite pour les processus de traitement de données
 class Process(MetaProcess):
     """
-    Classe abstraite de définition d'un processus de traitement des
-    données.
-    Pour définir un traitement, il est nécessaire de définir une
-    classe héritant de cette classe (Process). Il doit
-    obligatoirement être implémenté la fonction run(self,images) et
-    l'attribut process_desc (avec une valeur différente de None ou "").
+    Abstract class to define a preprocess.
+    To define a new process, it is needed to define process
+    description and run function has to be implemented as the main
+    of the process.
+    The process_desc is used to describe libraries and the process
+    computations.
     Ex :
     class Process_exemple(Process):
-        process_desc = "PyTesseract2.0-> recherche de caractères"
+        process_desc = "OpenCV4.2.1.30-> Pattern matching seat"
+        def run():
+            ...
     ...
     """
     process_desc = None
@@ -443,7 +502,14 @@ class Process(MetaProcess):
     @overrides
     @abstractmethod
     def run(self, image: Iterable, json: dict, **kwargs) -> None:
+        """
+
+        :param image: Iterable : image preprocessed
+        :param json:  dict : input/output parameter : the dictionnary
+        to fill with informations
+        """
         pass
+
 
 class SeatFinder(Process):
     process_desc = "OpenCV4.1.2.30 -> Pattern Matching seat"
@@ -639,8 +705,8 @@ class SeatFinder(Process):
     def coord_pattern_finder(self, image, template, threshold: float):
         """
         input:
-            image : image plane cv2.imread() black and white
-            template : image pattern cv2.imread() black and white
+            image : image plane cv.imread() black and white
+            template : image pattern cv.imread() black and white
             threshold : threshold for this pattern
         output:
             position : list right angle position for this pattern on the image
@@ -656,7 +722,7 @@ class SeatFinder(Process):
     def templ_category(self, path='./images/TEMPLATE/', category='BUSINESS',
                        seat_type='STANDARD', plane_name='test.jpg'):
         """
-        Create list of template open with cv2 by category and seatType
+        Create list of template open with cv by category and seatType
         Input:
             Path: directory path of templates
             category: name of category
@@ -695,14 +761,13 @@ class SeatFinder(Process):
         # Reduce Threshold while no template match
         while len(position) < 1 and threshold > thresholdMin:
             threshold -= 0.005
-            position = self.coord_pattern_finder( img, template,
+            position = self.coord_pattern_finder(img, template,
                                                  threshold)
 
         if threshold > thresholdMin:
-            return(img[position[0][1]:position[0][1] + h,
-                       position[0][0]:position[0][0] + w], True)
-        return(None, False)
-
+            return (img[position[0][1]:position[0][1] + h,
+                    position[0][0]:position[0][0] + w], True)
+        return (None, False)
 
     def count_list(self, list):
         """
@@ -731,7 +796,6 @@ class SeatFinder(Process):
         """
         position = []
         for threshold in np.arange(thresholdMin, 1 + step, step):
-
             position += self.coord_pattern_finder(img, template, threshold)
 
         result = list(self.count_list(position).keys())
@@ -786,7 +850,8 @@ class SeatFinder(Process):
                 templateFind, find = self.template_from_template(image,
                                                                  templ)
                 if find:
-                    position = self.best_position(image, templateFind, objet['Count'])
+                    position = self.best_position(image, templateFind,
+                                                  objet['Count'])
 
                     h, w = templ.shape
                     for i in range(len(position)):
@@ -900,7 +965,7 @@ class SegmentationZone(Process):
 
         # Initialize the dictionnary which will display the results
         temp_rcgnzd = {}
-        #print(json[image_name])
+        # print(json[image_name])
         # Pre-process the image
 
         # Image rgb to gray
@@ -929,8 +994,8 @@ class SegmentationZone(Process):
 
                 for rect in json[image_name]['rectangles']:
 
-                    if pos[0] > rect[1] and pos[0] < rect[3] and pos[1] > rect[
-                        0] and pos[1] < rect[2]:
+                    if rect[1] < pos[0] < rect[3] \
+                            and rect[0] < pos[1] < rect[2]:
 
                         if rect not in liste_position:
                             liste_position.append(rect)
@@ -940,9 +1005,6 @@ class SegmentationZone(Process):
             temp_rcgnzd[image_name] = type_temp
 
         json[image_name] = temp_rcgnzd[image_name]
-
-
-
 
     def run(self, image, json, image_rgb=None, col_obj=None, templates=None,
             data_image=None, image_name=None, **kwargs) -> None:
@@ -960,19 +1022,20 @@ class SegmentationZone(Process):
                                                   threshold=0.5)
 
 
-
-# Classe abstraite pour les processus de post-traitement de données
 class Postprocess(MetaProcess):
     """
-    Classe abstraite de définition d'un processus de post-traitement des
-    données.
-    Pour définir un pré-traitement, il est nécessaire de définir une
-    classe héritant de cette classe (Postprocess). Il doit
-    obligatoirement être implémenté la fonction run(self,images) et
-    l'attribut process_desc (avec une valeur différente de None ou "").
+    Abstract class to define a postprocess.
+    To define a new post-process, it is needed to define process
+    description and run function has to be implemented as the main
+    of the process.
+    The process_desc is used to describe libraries and the process
+    computations.
     Ex :
-    class Preprocess_exemple(Proprocess):
-        process_desc = "OpenCV4.0 -> alignement des predictions"
+    class Process_exemple(Process):
+        process_desc = "Standard python >3.5 -> Remove seat detected
+        multiple times"
+        def run():
+            ...
     ...
     """
     process_desc = None
@@ -989,45 +1052,60 @@ class Postprocess(MetaProcess):
 
 class RemoveDoubleSeat(Postprocess):
     process_desc = "Standard Python >= 3.5 -> remove double point in list"
-    def remove_duplicate(self,coordinate: list):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+    def remove_duplicate(self, coordinate: list):
         """Documentation
         Parameters:
             coordinate: original coordinates without treatment
         Out:
             dup: list of coordinate which are duplicated
         """
+        dup = {}
 
-        dup = []
-        print(coordinate)
-        for point1 in coordinate:
-            for point2 in coordinate:
-                if point2 != point1 and point1 not in dup:
-                    if ((abs(point1[0] - point2[0]) <= 5) and (abs(point1[1] - point2[1]) <= 5)):
-                        dup.append(point2)
+        for category in coordinate:
+            dup[category] = []
+            for point1 in coordinate[category]:
+                for point2 in coordinate[category]:
+                    if point2 != point1 and point1 not in dup:
+                        if ((abs(point1[0] - point2[0]) <= 5) and (
+                                abs(point1[1] - point2[1]) <= 5)):
+                            dup[category].append(point2)
         for d in dup:
-            if d in coordinate:
-                coordinate.remove(d)
-        return(coordinate)
+            for category in coordinate:
+                if d in coordinate[category]:
+                    coordinate.remove(d)
+
+        return coordinate
 
     def run(self, json, **kwargs):
-        for img_name in json:
-            for seat_index in json[img_name]:
-                json[img_name][seat_index] = self.remove_duplicate(json[img_name][seat_index])
+        for seat_index in json:
+            json[seat_index] = self.remove_duplicate(json[seat_index])
 
 
 # Classe pour le pipeline
 class Pipeline:
     """
-    Classe permettant de définir un pipeline. Le pipeline execute dans
-    l'ordre le pré_processing, le processing et le post_processing.
-    Cette classe contient 3 numpy array contenant la liste des
-    traitements pour chaque étapes à réaliser. Il faut utiliser les
-    fonction add_pre_process
+    Pipeline class : define the process order (pre-process -> process
+    -> post process) and informations exchanges between processes.
+    To add a process, add_processes take a list of processes even if
+    this list contain only 1 process.
     """
 
     def __init__(self, data_path, list_images_name: Iterable[str] = None,
                  layouts: Iterable[str] =
                  ['LAYOUT SEATGURU', 'LAYOUT SEATMAESTRO']) -> None:
+        """
+        Pipeline constructor
+        :param data_path: str : path to the base folder directly
+        extracted from the .zip archive
+        :param list_images_name: Iterable[str] : list of files images
+        to make the pipeline on.
+        :param layouts: Iterable[str] : list of layout folder to
+        consider
+        """
         self.pre_process: Iterable[type] = np.array([])
         self.process: Iterable[type] = np.array([])
         self.post_process: Iterable[type] = np.array([])
@@ -1041,12 +1119,12 @@ class Pipeline:
         self.layouts = layouts
         self.csv_path = data_path + "All Data/"
         self.layout_folder_path = self.csv_path + "ANALYSE IMAGE/"
-        self.image_folder_path = self.layout_folder_path + layouts[0] +"/"
-
+        self.image_folder_path = self.layout_folder_path + layouts[0] + "/"
 
     def add_processes(self, in_process: Iterable):
         """
-        Ajoute une liste de process dans le pipeline.
+        Add a list of processes in the pipeline. Processes are run in
+        the same order that they are processed
         :param in_process: Iterable[MetaProcess] : Liste des process à
         ajouter au pipeline. Chaque
         """
@@ -1085,8 +1163,8 @@ class Pipeline:
 
     def print_process(self):
         """
-        Affiche les processus qui seront executés permettant ainsi de
-        voir l'ordre d'execution des traitements dans le pipeline.
+        Print process that are in the pipeline. The order of printing is
+        the same as the running order.
         """
         for process in self.pre_process:
             print(process.process_desc)
@@ -1095,56 +1173,67 @@ class Pipeline:
         for process in self.post_process:
             print(process.process_desc)
 
-    # Pas besoin de retourner les variables : on modifie directement les images
-    def run_pipeline(self, nb_images: int, data_path = None,**kwargs) -> None:
+    def print_traceback(self, proc : MetaProcess, num: int, e: Exception) -> None :
+        traceback.print_tb(e.__traceback__)
+        print("Proprocess number " + str(num)
+              + "( " + proc.process_desc
+              + " ) raised an error.")
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[
+            1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        print(e)
+
+    def run_pipeline(self, nb_images: int, verbose=True, **kwargs) -> None:
         """
-        Execute le pipeline. Il sera executé dans l'ordre
-            - le pré-processing
-            - le processing
-            - le post-processing
-        Chaque process est conservé dans une liste et chaque groupe de
-        process sera executé dans l'ordre dans lequel les process ont
-        été ajoutés dans la liste de traitements.
-        Les images sont directement modifiés.
-        :param images: objet array-like : contient la liste de images
-        :return: None
+        Run the pipeline. Compute, in order :
+            - preprocessing
+            - processing
+            - postprocessing
+        Each process is kept in a list for each type of process. Process
+        are run in the order they are put in the list.
+        Run the computations over 1 image at a time and are directly
+        modified.
+        The output are saved in the json class argument.
+        :param nb_images: int : number of images to compute the pipeline
+        on.
+        :param verbose : bool : set visualisation on or off. Image are
+        plot with matplotlib and process list are printed if
+        verbose = True.
+        :param **kwargs : allow argument passing by this dictionnary. It
+        is used to give parameters to process in the run. Don't forget
+        to name parameter the same as in the process definition.
         """
-        self.print_process()
-        if self.list_images_name is None :
-            self.list_images_name = os.listdir(self.image_folder_path)[:nb_images]
+        if verbose is True :
+            self.print_process()
+        if self.list_images_name is None:
+            self.list_images_name = os.listdir(self.image_folder_path)[
+                                    :nb_images]
 
         for image_name in self.list_images_name:
-            # Create a Colour object
-            col_obj = Colour(self.layout_folder_path, self.layouts[0], image_name)
-            # Create a
-            #util_obj = ImageUtil(self.data_path + self.layouts[0] + "/", image_name)
-
-            plt.figure(figsize=(4,4))
-            plt.imshow(col_obj.image)
-            plt.show()
-            print("Début du pipeline : ")
+            # Create a Colour object containing the image to process.
+            col_obj = Colour(self.layout_folder_path, self.layouts[0],
+                             image_name)
+            if verbose is True:
+                plt.figure(figsize=(4, 4))
+                plt.imshow(col_obj.image)
+                plt.show()
+            print("Pipeline start : ")
             image = None
             for num, pre_process in enumerate(self.pre_process):
 
                 pre_pro = pre_process(col_obj)
                 try:
-                    # Instanciation du process
+                    # Process instantiation
                     print("Doing : " + pre_pro.process_desc)
                     image = pre_pro.run(**kwargs)
                     col_obj.set_image(image)
-                    plt.figure(figsize=(40,40))
-                    plt.imshow(col_obj.image)
-                    plt.show()
+                    if verbose is True:
+                        plt.figure(figsize=(40, 40))
+                        plt.imshow(col_obj.image)
+                        plt.show()
                 except Exception as e:
-                    traceback.print_tb(e.__traceback__)
-                    print("Le pré-processing numéro " + str(num)
-                          + "( " + pre_pro.process_desc
-                          + " ) a levé une erreur.")
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
-                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[
-                        1]
-                    print(exc_type, fname, exc_tb.tb_lineno)
-                    print(e)
+                    self.print_traceback(pre_pro, num, e)
 
             for num, process in enumerate(self.process):
                 pro = process(csv_data_path=self.csv_path)
@@ -1152,100 +1241,29 @@ class Pipeline:
                     if image is not None:
                         print("Doing : " + pro.process_desc)
                         # data_image = le path de l'image
-                        pro.run(image, self.json, image_rgb = col_obj.image,
-                                data_image =self.image_folder_path + image_name,
-                                image_name = image_name, **kwargs)
+                        pro.run(image, self.json, image_rgb=col_obj.image,
+                                data_image=self.image_folder_path + image_name,
+                                image_name=image_name, **kwargs)
+                        if verbose is True:
+                            print(pipeline.json)
                     else:
                         raise ValueError("Image = None")
                 except Exception as e:
-                    traceback.print_tb(e.__traceback__)
-                    print("Le processing numéro " + str(num)
-                          + "( " + pro.process_desc + " ) a levé une erreur.")
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
-                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[
-                        1]
-                    print(exc_type, fname, exc_tb.tb_lineno)
-                    print(e)
+                    self.print_traceback(pro, num, e)
 
             for num, post_process in enumerate(self.post_process):
                 post_pro = post_process()
                 try:
                     print("Doing : " + post_pro.process_desc)
-                    post_pro.run(self.json,image_name = image_name, **kwargs)
+                    post_pro.run(self.json, image_name=image_name, **kwargs)
                 except Exception as e:
-                    traceback.print_tb(e.__traceback__)
-                    print("Le processing numéro " + str(num)
-                          + "( " + post_pro.process_desc
-                          + " ) a levé une erreur.")
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
-                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[
-                        1]
-                    print(exc_type, fname, exc_tb.tb_lineno)
-                    print(e)
+                    self.print_traceback(post_pro, num, e)
 
-                    
-
-import sklearn
-from sklearn.cluster import DBSCAN
-
-class AStarGraph(object):
-    """Documentation
-    Class to create the graph for the execution of the A* algorithm
-    """
-    # Define a class board like grid with two barriers
-    def __init__(self, barriers: list):
-        """Documentation
-        Assign the barriers for the object graph
-        Parameters:
-            barriers: list of lists of tuples. Each list corresponds to the points that constitute the obstacles.
-        """
-        self.barriers = barriers
-    def heuristic(self, start: tuple, goal: tuple):
-        """Documentation
-        Function to calculate the distance between the start and end point
-        Parameters:
-            start: Point of the start for the A* algorithm
-            goal: Point of the end for the A* algorithm
-        Out:
-            Distance calculated between the start point and the end point
-        """
-        # Use Chebyshev distance heuristic if we can move one square either
-        #adjacent or diagonal
-        D: int = 1
-        D2: int = 1
-        dx: int = abs(start[0] - goal[0])
-        dy: int = abs(start[1] - goal[1])
-        return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
-    def get_vertex_neighbours(self, pos: tuple):
-        """Documentation
-        Returns the neighbouring points according to the four movements in front, right, left and back
-        Parameters:
-            pos: Current point
-        Out:
-            n: All neighbour points
-        """
-        n = []
-        # Allowed movements are left, front, right and back
-        for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-            x2 = pos[0] + dx
-            y2 = pos[1] + dy
-#             if x2 < 0 or x2 > 7 or y2 < 0 or y2 > 7:
-#                 pass
-            n.append((x2, y2))
-        return n
-    def move_cost(self, a: tuple, b: tuple):
-        """Documentation
-        Calculate the cost of a move to a neighbour
-        Parameters:
-            a: Current point
-            b: Neighbour
-        """
-        for barrier in self.barriers:
-            if b in barrier:
-                return 9999999999999999999  # Extremely high cost to enter barrier squares
-        return 1  # Normal movement cost
-    
 class DistPipeline():
+
+    def __init__(self, pipeline, pipeline_zone):
+        self.pipeline = pipeline
+        self.pipeline_zone = pipeline_zone
 
     def change_format(self, dict_seat: dict):
         """Documentation
@@ -1280,9 +1298,10 @@ class DistPipeline():
         plt.scatter(x_wo_dup, y_wo_dup, c=dbscan.labels_.astype(
             float), s=50, alpha=0.5)
         plt.show()
-        return(dbscan)
+        return (dbscan)
 
-    def clusters_to_rect(self, dbscan: sklearn.cluster.dbscan_.DBSCAN, array_wo_dup: np.array):
+    def clusters_to_rect(self, dbscan: sklearn.cluster.dbscan_.DBSCAN,
+                         array_wo_dup: np.array):
         """Documentation
         Parameters:
             dbscan: clustering result with DBSCAN
@@ -1300,7 +1319,8 @@ class DistPipeline():
             index = [i for i, x in enumerate(
                 list(dbscan.labels_)) if x == group]
             points_cluster = list_coord[index]
-            corner_bottom_right = (max(i[0] for i in points_cluster) + WIDTH, min(
+            corner_bottom_right = (
+            max(i[0] for i in points_cluster) + WIDTH, min(
                 i[1] for i in points_cluster) - HEIGHT)
             corner_top_right = (max(i[0] for i in points_cluster) + WIDTH, max(
                 i[1] for i in points_cluster))
@@ -1312,7 +1332,8 @@ class DistPipeline():
             width = corner_bottom_right[0] - corner_bottom_left[0]
             list_rect.append(((corner_bottom_left), width, height))
             list_rect2.append(
-                (corner_bottom_left, corner_top_left, corner_top_right, corner_bottom_right))
+                (corner_bottom_left, corner_top_left, corner_top_right,
+                 corner_bottom_right))
         return list_rect, list_rect2
 
     def centroid_obstacle(self, coord_obs: list):
@@ -1324,7 +1345,8 @@ class DistPipeline():
         """
         A_point = coord_obs[1], coord_obs[0]
         B_point = coord_obs[3], coord_obs[2]
-        return int(np.mean([A_point[0], B_point[0]])), int(np.mean([A_point[1], B_point[1]]))
+        return int(np.mean([A_point[0], B_point[0]])), int(
+            np.mean([A_point[1], B_point[1]]))
 
     def centroid_seat(self, coord_seat: tuple):
         """Documentation
@@ -1335,9 +1357,8 @@ class DistPipeline():
         """
         x, y = coord_seat[0], coord_seat[1]
         h, w = coord_seat[2], coord_seat[3]
-        return (int(x+w/2),int(y+h/2))
+        return (int(x + w / 2), int(y + h / 2))
 
-    
     def dist_crow_flies(self, coord_bar_seat: tuple, coord_bar_obs: tuple):
         """Documentation
         Parameters:
@@ -1346,11 +1367,10 @@ class DistPipeline():
         Out:
             dist: distance between the two barycenter
         """
-        dist = np.sqrt(((coord_bar_obs[0]-coord_bar_seat[0])
-                        ** 2)+((coord_bar_obs[1]-coord_bar_seat[1])**2))
+        dist = np.sqrt(((coord_bar_obs[0] - coord_bar_seat[0])
+                        ** 2) + ((coord_bar_obs[1] - coord_bar_seat[1]) ** 2))
         return round(dist, 2)
 
-    
     def AStarSearch(self, start: tuple, end: tuple, graph: AStarGraph):
         """Documentation
         A* algorithm to find the best path for from one point to another
@@ -1367,7 +1387,7 @@ class DistPipeline():
         F: dict = {}  # Estimated movement cost of start to end going via this position
         # Initialize starting values
         G[start] = 0
-        F[start] = graph.heuristic(start, end) ###appeler class
+        F[start] = graph.heuristic(start, end)  ###appeler class
         closedVertices: set = set()
         openVertices: set = set([start])
         cameFrom: dict = {}
@@ -1405,8 +1425,7 @@ class DistPipeline():
                 G[neighbour] = candidateG
                 H = graph.heuristic(neighbour, end)
                 F[neighbour] = G[neighbour] + H
-    
-    
+
     def create_barriers_obs(self, coord_obstacle: iter, goal: tuple):
         """Documentation
         Return a list of lists representing the different obstacles
@@ -1431,10 +1450,10 @@ class DistPipeline():
                     list_temp_1.append((coord[1], coord[0] + y))
                 if coord[2] - y != goal[1]:
                     list_temp_3.append((coord[3], coord[2] - y))
-            list_barriers.append(list_temp_1 + list_temp_2 + list_temp_3 + list_temp_4)
+            list_barriers.append(
+                list_temp_1 + list_temp_2 + list_temp_3 + list_temp_4)
         return list_barriers
 
-    
     def create_barriers_seat(self, corners_rect: iter, start: tuple):
         """Documentation
         Return a list of lists representing the different cluster of the seats
@@ -1459,7 +1478,8 @@ class DistPipeline():
                     list_temp_3.append((corners[0][0], corners[0][1] + y))
                 if corners[2][1] - y != start[1]:
                     list_temp_4.append((corners[2][0], corners[2][1] - y))
-            list_points.append(list_temp_1 + list_temp_2 + list_temp_3 + list_temp_4)
+            list_points.append(
+                list_temp_1 + list_temp_2 + list_temp_3 + list_temp_4)
         return list_points
 
     def plane_contours(self, barriers_obs: iter, barriers_seat: iter):
@@ -1499,8 +1519,9 @@ class DistPipeline():
             list_temp_4.append((x_max - x, y_min))
         list_contours = list_temp_1 + list_temp_2 + list_temp_3 + list_temp_4
         return list_contours
-    
-    def pathfinder(self, start: tuple, goal: tuple, list_rect2: iter, obstacles: iter):
+
+    def pathfinder(self, start: tuple, goal: tuple, list_rect2: iter,
+                   obstacles: iter):
         """Documentation
         Create the graph for the A* algorithm and calculate the best path
         Parameters:
@@ -1521,13 +1542,15 @@ class DistPipeline():
         plt.figure(figsize=(40, 40))
         plt.plot([v[0] for v in path], [v[1] for v in path])
         for barrier in graph.barriers:
-            plt.plot([v[0] for v in barrier], [v[1] for v in barrier], color='red')
+            plt.plot([v[0] for v in barrier], [v[1] for v in barrier],
+                     color='red')
         plt.xlim(100, 400)
         plt.ylim(0, 1400)
         plt.show()
         return path, cost
-    
-    def draw_path(self, path: str, img: str, obs_number: int, seat_number: int, obstacle: list, json_seat: dict):
+
+    def draw_path(self, path: str, img: str, obs_number: int, seat_number: int,
+                  obstacle: list, json_seat: dict):
         """Documentation
         Parameters:
             path: folder path
@@ -1552,19 +1575,20 @@ class DistPipeline():
             ax.add_patch(
                 patches.Rectangle(rect[0], rect[1], rect[2]))
 
-        img_cv = cv2.imread(path + img)
+        img_cv = cv.imread(path + img)
         #
         for obs in obstacle:
             A_point = obs[1], obs[0]
             B_point = obs[3], obs[2]
 
-            img_cv = cv2.rectangle(img_cv, A_point, B_point, (255, 0, 0), 2)
+            img_cv = cv.rectangle(img_cv, A_point, B_point, (255, 0, 0), 2)
 
-        ob = list(pipeline_zone.json.values())[0]['rectangles'][obs_number]
+        ob = list(self.pipeline_zone.json.values())[0]['rectangles'][obs_number]
         t_obs = [(ob[0], ob[1]), (ob[2], ob[3])]
 
-        img_cv = cv2.line(img_cv, self.centroid_seat(
-            list_seat[seat_number]), self.centroid_obstacle(t_obs), (255, 255, 0), 2)
+        img_cv = cv.line(img_cv, self.centroid_seat(
+            list_seat[seat_number]), self.centroid_obstacle(t_obs),
+                          (255, 255, 0), 2)
         plt.imshow(img_cv)
         plt.show()
 
@@ -1576,15 +1600,15 @@ class DistPipeline():
         Out:
             dicimg: json final structure
         """
-        
+
         dicimg = {}
-        
+
         # for each image in the json
         for img in list(json_zone.keys()):
             dicimg[img] = {}
             # for each type seat
             for typeseat in json_seat[img].keys():
-                
+
                 dicimg[img][typeseat] = {}
                 # for each coordinate in a type seat
                 for coord_seat in json_seat[img][typeseat]:
@@ -1594,20 +1618,129 @@ class DistPipeline():
                     # for each obstacle type
                     for obstacle_type in json_zone[img].keys():
                         # if there is obstacles of that type of obstacle
-                        if len(json_zone[img][obstacle_type]) > 0: 
-                            dicimg[img][typeseat][str(coord_centroid_seat)][obstacle_type] = []
+                        if len(json_zone[img][obstacle_type]) > 0:
+                            dicimg[img][typeseat][str(coord_centroid_seat)][
+                                obstacle_type] = []
                             # for each coordinates in the obstacle type
-                            for coord_obstacle_type in json_zone[img][obstacle_type]:
+                            for coord_obstacle_type in json_zone[img][
+                                obstacle_type]:
                                 # get the centroid position of the obstacle
-                                coord_centroid_obstacle = self.centroid_obstacle(coord_obstacle_type)
-                                
+                                coord_centroid_obstacle = self.centroid_obstacle(
+                                    coord_obstacle_type)
+
                                 # calcualate the distance etween the seat and the obstacle
-                                distance = self.dist_crow_flies(coord_centroid_seat, coord_centroid_obstacle)
-                                
+                                distance = self.dist_crow_flies(
+                                    coord_centroid_seat,
+                                    coord_centroid_obstacle)
+
                                 # save this distance in the dict
-                                dicimg[img][typeseat][str(coord_centroid_seat)][obstacle_type].append([coord_centroid_obstacle, distance])
+                                dicimg[img][typeseat][
+                                    str(coord_centroid_seat)][
+                                    obstacle_type].append(
+                                    [coord_centroid_obstacle, distance])
         return dicimg
-    
+
+
+
+pipeline = Pipeline("/data/dataset/projetinterpromo/Interpromo2020/",
+                    ["Aer_Lingus_Airbus_A330-300_A_plane6.jpg"])
+#
+pipeline.add_processes([BlackWhite, SeatFinder, RemoveDoubleSeat])
+pipeline.run_pipeline(1)
+
+
+def show_seats_find(image_rgb, json=None, img_name=None):
+    """
+    input:
+        image : Opened image with color
+        json : coordonate
+        img_name : image name
+    output:
+        NONE
+    """
+    color = {'BUSINESS': (255, 0, 0),
+             'ECONOMY': (0, 0, 255),
+             'FIRST': (0, 255, 0),
+             'PREMIUM': (255, 255, 0)}
+
+    for category in json[img_name]:
+        for pos in json[img_name][category]:
+            cv.rectangle(
+                image_rgb, pos[0:2], (pos[0] + pos[3], pos[1] + pos[2]),
+                color[category], 2)
+
+    plt.imshow(image_rgb)
+    plt.show()
+
+
+import sklearn
+from sklearn.cluster import DBSCAN
+
+
+class AStarGraph(object):
+    """Documentation
+    Class to create the graph for the execution of the A* algorithm
+    """
+
+    # Define a class board like grid with two barriers
+    def __init__(self, barriers: list):
+        """Documentation
+        Assign the barriers for the object graph
+        Parameters:
+            barriers: list of lists of tuples. Each list corresponds to the points that constitute the obstacles.
+        """
+        self.barriers = barriers
+
+    def heuristic(self, start: tuple, goal: tuple):
+        """Documentation
+        Function to calculate the distance between the start and end point
+        Parameters:
+            start: Point of the start for the A* algorithm
+            goal: Point of the end for the A* algorithm
+        Out:
+            Distance calculated between the start point and the end point
+        """
+        # Use Chebyshev distance heuristic if we can move one square either
+        # adjacent or diagonal
+        D: int = 1
+        D2: int = 1
+        dx: int = abs(start[0] - goal[0])
+        dy: int = abs(start[1] - goal[1])
+        return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
+
+    def get_vertex_neighbours(self, pos: tuple):
+        """Documentation
+        Returns the neighbouring points according to the four movements in front, right, left and back
+        Parameters:
+            pos: Current point
+        Out:
+            n: All neighbour points
+        """
+        n = []
+        # Allowed movements are left, front, right and back
+        for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+            x2 = pos[0] + dx
+            y2 = pos[1] + dy
+            #             if x2 < 0 or x2 > 7 or y2 < 0 or y2 > 7:
+            #                 pass
+            n.append((x2, y2))
+        return n
+
+    def move_cost(self, a: tuple, b: tuple):
+        """Documentation
+        Calculate the cost of a move to a neighbour
+        Parameters:
+            a: Current point
+            b: Neighbour
+        """
+        for barrier in self.barriers:
+            if b in barrier:
+                return 9999999999999999999  # Extremely high cost to enter barrier squares
+        return 1  # Normal movement cost
+
+
+
+
 #     def to_json_complex_distance(self, json_seat: dict, json_zone: dict):
 #         """Documentation
 #         Parameters:
@@ -1617,14 +1750,14 @@ class DistPipeline():
 #             dicimg: json final structure
 #         """
 #         dicimg = {}
-        
+
 #         # Get all obstacles coord
 #         all_obstacles_coord = []
 #         for img in list(json_zone.keys()):
 #             for obstacle_type in json_zone[img].keys():
 #                 for coord_obstacle_type in json_zone[img][obstacle_type]:
 #                     all_obstacles_coord.append(coord_obstacle_type)
-        
+
 #         for img in list(json_zone.keys()):
 #             dicimg[img] = {}
 #             for typeseat in json_seat[img].keys():
@@ -1635,7 +1768,7 @@ class DistPipeline():
 #                 coord_seats_merge= self.change_format(json_seat[img])[0]
 #                 clusters = self.find_cluster(31, 3, coord_seats_merge)
 #                 plot_rect, rectangles = self.clusters_to_rect(clusters, np.array(coord_seats_merge))
-                
+
 #                 dicimg[img][typeseat] = {}
 #                 # for each coordinate in a type seat
 #                 for coord_seat in json_seat[img][typeseat]:
@@ -1645,275 +1778,39 @@ class DistPipeline():
 #                     # for each obstacle type
 #                     for obstacle_type in json_zone[img].keys():
 #                         # if there is obstacles of that type
-#                         if len(json_zone[img][obstacle_type]) > 0: 
+#                         if len(json_zone[img][obstacle_type]) > 0:
 #                             dicimg[img][typeseat][str(coord_centroid_seat)][obstacle_type] = []
 #                             for coord_obstacle_type in json_zone[img][obstacle_type]:
 #                                 # get the centroid position of the obstacle
 #                                 coord_centroid_obstacle = self.centroid_obstacle(coord_obstacle_type)
-                                
+
 #                                 # get the distance with the obstacles
 #                                 distance_jason = self.pathfinder(coord_centroid_seat, coord_centroid_obstacle, rectangles, all_obstacles_coord)
 #                                 print(coord_centroid_seat, coord_centroid_obstacle, distance_jason)
 #                     break
 #                 break
-#             break                     
+#             break
 #         return dicimg
 #
 #
 
+"""
 
-
-
-
-
-
-
-''' 
-
-# Fonction de test : à mettre en place si besoin 
-
-    def run_pipeline_with_copy(self, images: Iterable[Iterable]) -> None:
-        try:
-            images_copy = images.copy()
-        except AttributeError:
-            print("L'objet utilisé ne possède pas de fonction \"copy()"
-                  "\".Il n'est pas possible d'utiliser le pipeline avec "
-                  "copy.")
-            raise
-        for preprocess in self.pre_process:
-            preprocess.run(images_copy)
-        for process in self.process:
-            process.run(images)
-        for post_process in self.post_process:
-            post_process.run(images)
-'''
-
-''' 
-
-# Exemple d'utilisation du pipeline.
-if __name__ == "__main__":
-    class Augmentation(Preprocess):
-        process_desc = "OpenCV4.0 -> data augmentation"
-
-        def run(self, images):
-            print("Pre_processing...")
-
-
-    class PyTesseract(Process):
-        process_desc = "PyTesseract3.8.0 -> recherche caractères"
-
-        def run(self, images):
-            print("Processing...")
-
-
-    class Alignement(Postprocess):
-        process_desc = "Pandas -> alignement predictions"
-
-        def run(self, images):
-            print("Post_processing...")
-
-
-    class Wrong_Process(MetaProcess):
-        pass
-
-
-    class Coucou_process(Wrong_Process):
-        process_desc = "Errortest"
-
-        def run(self, images):
-            print("Error")
-
-
-    pipeline = Pipeline()
-
-    pipeline.add_processes([Augmentation(), "", Coucou_process()])
-    pipeline.add_processes([PyTesseract()])
-    pipeline.add_processes([Alignement()])
-
-    pipeline.run_pipeline([])
-    print(Augmentation.run.__doc__)
+from gensim.parsing.preprocessing import strip_numeric, strip_non_alphanum
+def merge_elements(json_zone):
+    merge_dictio = {}
+    for k in json_zone.keys():
+        for el in json_zone[k].keys():
+            merge_dictio[strip_non_alphanum(strip_numeric(el.split('.')[0]))] = []
     
+    keys = merge_dictio.keys()
+    for k in json_zone.keys():
+        for el in json_zone[k].keys():
+            for merge_key in merge_dictio.keys():
+                if merge_key in el:
+                    merge_dictio[merge_key]+= json_zone[k][el]
+                merge_dictio[merge_key] = list( dict.fromkeys(merge_dictio[merge_key]) )
+    return json_zone, merge_dictio
     
-    
-    
-    
-    
-    
-                    
-class PatternMatchingNormalSeat(Process):
-    process_desc = "OpenCV4.1.2.30 -> pattern matching normal seat"
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-    def coord_pattern_finder(self,image, template, threshold: float):
-        """
-        input:
-            image : image plane cv2.imread() black and white
-            template : image pattern cv2.imread() black and white
-            threshold : threshold for this pattern
-        output:
-            position : list right angle position for this pattern on the image
-
-        """
-        position = []  # Variable output
-        # List of match
-        res = cv.matchTemplate(image, template, cv.TM_CCOEFF_NORMED)
-        for pos in zip(*np.where(res >= threshold)[::-1]):
-            position.append(pos)
-        return(position)
-    
-    
-    def run(self, image, json, image_rgb = None, col_obj = None, templates = None, data_image=None, **kwargs) -> None :
-        #col_obj = Colour(data_path, layouts[0], p)
-        #col_obj = Colour(data_image[0], data_image[1][0], data_image[2])
-        
-    # Make a colour detection based on the layout type ('GURU' or 'MAESTRO') and image type('png', 'jpg')
-        img_to_show = image
-
-        img_rgb = image_rgb
-        img_gray = image
-#         img_rgb = cv.imread(data_image, 1)
-        img_gray = cv.imread(data_image, 0)
-        print(data_image + ' shape', img_gray.shape)
-
-        for template_name in templates:
-            #template = cv.imread(templates_path + template_name, 0)
-            
-            template = cv.imread("./images/" + template_name, 0)
-            if template is not None:
-                h, w = template.shape
-                print(template_name, h,w,img_gray.shape)
-
-                threshold = 0.8 #  Default threshold
-                # Choose threshold for each template
-                if template_name == 'temp_business_seat_armrest_left.jpg':
-                    threshold = 0.6
-                elif template_name == 'temp_business_seat_armrest_right.jpg':
-                    threshold = 0.6
-                elif template_name == 'temp_business_seat_footrest.jpg':
-                    threshold = 1
-                elif template_name == 'temp_first_seat.jpg':
-                    threshold = 1
-                elif template_name == 'temp_normal_seat.png':
-                    threshold = 0.7
-                elif template_name == 'temp_normal_seat_elec.jpg':
-                    threshold = 1
-                elif template_name == 'temp_normal_seat_little.jpg':
-                    threshold = 0.65
-                elif template_name == 'temp_yellow_seat.jpg':
-                    threshold = 1
-
-                position = self.coord_pattern_finder(img_gray, template, threshold)
-
-                for pos in position:
-                    img_to_show = cv.rectangle(img_to_show, pos, (pos[0] + w, pos[1] + h), (0, 0, 255), 2)
-                json[template_name] = position
-        plt.figure(figsize=(20, 40))
-        plt.imshow(img_to_show.astype('uint8'))
-        print(json)
-'''
-
-
-#
-# class RemoveDouble(Postprocess):
-#     process_desc = "Standard Python >= 3.5 -> remove double point in list"
-#     def __init__(self, *args, **kwargs):
-#         super().__init__()
-#     def remove_duplicate(self,coordinate: list):
-#         """Documentation
-#         Parameters:
-#             coordinate: original coordinates without treatment
-#         Out:
-#             dup: list of coordinate which are duplicated
-#         """
-#         dup = []
-#         print(coordinate)
-#         for point1 in coordinate:
-#             for point2 in coordinate:
-#                 if point2 != point1 and point1 not in dup:
-#                     if ((abs(point1[0] - point2[0]) <= 5) and (abs(point1[1] - point2[1]) <= 5)):
-#                         dup.append(point2)
-#         for d in dup:
-#             if d in coordinate:
-#                 coordinate.remove(d)
-#         return(coordinate)
-#
-#     def run(self, json, **kwargs):
-#         for seat_index in json:
-#             json[seat_index] = self.remove_duplicate(json[seat_index])
-#
-#
-# class ColourPipelineSeat(Preprocess):
-#     process_desc = "Standard Python >= 3.5 -> preprocess colours"
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#
-#     def run(self, **kwargs) -> Iterable:
-#         return self.col_obj.colour_pipeline(colours={}, epsilon=40,
-#                                             colour_mode=False,
-#                                             default_colour=[255, 255, 255],
-#                                             rgb_len=3)
-#
-#
-# class BlackWhite(Preprocess):
-#     process_desc = "OpenCV4.1.2.30 -> rgb to grey"
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#
-#     def run(self, **kwargs) -> Iterable:
-#         return self.col_obj.util_obj.to_gray()
-#
-#
-# class ColourPipelineZones(Preprocess):
-#     process_desc = "Standard Python >= 3.5 -> preprocess colours"
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#
-#     def run(self, **kwargs) -> Iterable:
-#         return self.col_obj.colour_pipeline(colours={}, epsilon=30,
-#                                             colour_mode=True,
-#                                             default_colour=[0, 0, 0],
-#                                             rgb_len=3)
-#
-#
-# pipeline = Pipeline("/data/dataset/projetinterpromo/Interpromo2020/","Aer_Lingus_Airbus_A330-300_A_plane6.jpg")
-# pipeline.add_processes([BlackWhite,SeatFinder, RemoveDouble])
-# print(pipeline.json)
-# pipeline.run_pipeline(1, planes_data_csv=None, plane_name="Aer_Lingus_Airbus_A330-300_A_plane6.jpg", csv_data_path="/data/dataset/projetinterpromo/Interpromo2020")
-#
-# class ColourPipelineSeat(Preprocess):
-#     process_desc = "Standard Python >= 3.5 -> preprocess colours"
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#
-#     def run(self, **kwargs) -> Iterable:
-#         return self.col_obj.colour_pipeline(colours={}, epsilon=40,
-#                                             colour_mode=False,
-#                                             default_colour=[255, 255, 255],
-#                                             rgb_len=3)
-#
-#
-# class BlackWhite(Preprocess):
-#     process_desc = "OpenCV4.1.2.30 -> rgb to grey"
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#
-#     def run(self, **kwargs) -> Iterable:
-#         return self.col_obj.util_obj.to_gray()
-#
-#
-# class ColourPipelineZones(Preprocess):
-#     process_desc = "Standard Python >= 3.5 -> preprocess colours"
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#
-#     def run(self, **kwargs) -> Iterable:
-#         return self.col_obj.colour_pipeline(colours={}, epsilon=30,
-#                                             colour_mode=True,
-#                                             default_colour=[0, 0, 0],
-#                                             rgb_len=3).astype('uint8')
+merge_elements(pipeline_zone.json)
+"""
