@@ -9,7 +9,7 @@ from gensim.parsing.preprocessing import strip_numeric, strip_non_alphanum
 import pandas as pd
 
 
-class DistPipeline():
+class DistPipeline:
 
     def __init__(self, pipeline, pipeline_zone):
         self.pipeline = pipeline
