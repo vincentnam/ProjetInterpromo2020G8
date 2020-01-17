@@ -987,7 +987,7 @@ class Postprocess(MetaProcess):
         pass
 
 
-class RemoveDouble(Postprocess):
+class RemoveDoubleSeat(Postprocess):
     process_desc = "Standard Python >= 3.5 -> remove double point in list"
     def remove_duplicate(self,coordinate: list):
         """Documentation
@@ -996,6 +996,7 @@ class RemoveDouble(Postprocess):
         Out:
             dup: list of coordinate which are duplicated
         """
+
         dup = []
         print(coordinate)
         for point1 in coordinate:
@@ -1007,6 +1008,7 @@ class RemoveDouble(Postprocess):
             if d in coordinate:
                 coordinate.remove(d)
         return(coordinate)
+
     def run(self, json, **kwargs):
         for img_name in json:
             for seat_index in json[img_name]:
@@ -1360,6 +1362,7 @@ class DistPipeline():
             path: All points of the best path
             F[end]: Cost of the best path
         """
+
         G: dict = {}  # Actual movement cost to each position from the start position
         F: dict = {}  # Estimated movement cost of start to end going via this position
         # Initialize starting values
