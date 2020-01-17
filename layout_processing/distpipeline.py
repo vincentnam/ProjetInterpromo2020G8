@@ -1,22 +1,27 @@
 import sklearn
 import numpy as np
 from matplotlib import patches
-
+from sklearn.cluster import DBSCAN
 from .astargraph import AStarGraph
 import matplotlib.pyplot as plt
 import cv2 as cv
+from gensim.parsing.preprocessing import strip_numeric, strip_non_alphanum
+import pandas as pd
+
 
 class DistPipeline():
 
     def __init__(self, pipeline, pipeline_zone):
         self.pipeline = pipeline
-        self.pipeline_zone = pipeline_zone
+        self.pipeline_zone = self.merge_elements(pipeline_zone)
 
     def change_format(self, dict_seat: dict):
         """Documentation
         Parameters:
-            epsilon: the maximum distance between two samples for one to be considered as in the neighborhood of the other
-            min_sample: the number of samples in a neighborhood for a point to be considered as a core point
+            epsilon: the maximum distance between two samples for one
+            to be considered as in the neighborhood of the other
+            min_sample: the number of samples in a neighborhood for a
+             point to be considered as a core point
             list_wo_dup: list of seats coordinates not duplicated
         Out:
             list_wo_dup: list of seats coordinates
@@ -33,8 +38,10 @@ class DistPipeline():
     def find_cluster(self, epsilon: int, min_sample: int, list_wo_dup: list):
         """Documentation
         Parameters:
-            epsilon: the maximum distance between two samples for one to be considered as in the neighborhood of the other
-            min_sample: the number of samples in a neighborhood for a point to be considered as a core point
+            epsilon: the maximum distance between two samples for one to be
+            considered as in the neighborhood of the other
+            min_sample: the number of samples in a neighborhood for a point
+            to be considered as a core point
             list_wo_dup: list of seats coordinates not duplicated
         Out:
             dbscan: clustering result with DBSCAN
@@ -46,6 +53,25 @@ class DistPipeline():
             float), s=50, alpha=0.5)
         plt.show()
         return (dbscan)
+
+    def merge_elements(self, json_zone):
+        merge_dictio = {}
+        for k in json_zone.keys():
+            merge_dictio[k] = {}
+            for el in json_zone[k].keys():
+                merge_dictio[k][strip_non_alphanum(
+                    strip_numeric(el.split('.')[0])).replace(' ', '')] = []
+
+        keys = merge_dictio.keys()
+        for k in json_zone.keys():
+            for el in json_zone[k].keys():
+                for merge_key in merge_dictio[k].keys():
+                    if merge_key in el:
+                        merge_dictio[k][merge_key] += json_zone[k][el]
+                    merge_dictio[k][merge_key] = list(
+                        dict.fromkeys(merge_dictio[k][merge_key]))
+        return merge_dictio
+
 
     def clusters_to_rect(self, dbscan: sklearn.cluster.dbscan_.DBSCAN,
                          array_wo_dup: np.array):
@@ -129,9 +155,10 @@ class DistPipeline():
             path: All points of the best path
             F[end]: Cost of the best path
         """
-
-        G: dict = {}  # Actual movement cost to each position from the start position
-        F: dict = {}  # Estimated movement cost of start to end going via this position
+        # Actual movement cost to each position from the start position
+        G: dict = {}
+        # Estimated movement cost of start to end going via this position
+        F: dict = {}
         # Initialize starting values
         G[start] = 0
         F[start] = graph.heuristic(start, end)  ###appeler class
@@ -141,10 +168,10 @@ class DistPipeline():
         while len(openVertices) > 0:
             # Get the vertex in the open list with the lowest F score
             current = None
-            currentFscore = None
+            current_fscore = None
             for pos in openVertices:
-                if current is None or F[pos] < currentFscore:
-                    currentFscore = F[pos]
+                if current is None or F[pos] < current_fscore:
+                    current_fscore = F[pos]
                     current = pos
             # Check if we have reached the goal
             if current == end:
@@ -161,12 +188,14 @@ class DistPipeline():
             # Update scores for vertices near the current position
             for neighbour in graph.get_vertex_neighbours(current):
                 if neighbour in closedVertices:
-                    continue  # We have already processed this node exhaustively
+                    # We have already processed this node exhaustively
+                    continue
                 candidateG = G[current] + graph.move_cost(current, neighbour)
                 if neighbour not in openVertices:
                     openVertices.add(neighbour)  # Discovered a new vertex
                 elif candidateG >= G[neighbour]:
-                    continue  # This G score is worse than previously found
+                    # This G score is worse than previously found
+                    continue
                 # Adopt this G score
                 cameFrom[neighbour] = current
                 G[neighbour] = candidateG

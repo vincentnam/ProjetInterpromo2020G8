@@ -1,3 +1,5 @@
+scikit-learn
+gensim
 scikit-image
 matplotlib
 Pillow
