@@ -13,7 +13,8 @@ class DistPipeline():
 
     def __init__(self, pipeline, pipeline_zone):
         self.pipeline = pipeline
-        self.pipeline_zone = self.merge_elements(pipeline_zone)
+        self.pipeline_zone = pipeline_zone
+        self.pipeline_zone.json = self.merge_elements(self.pipeline_zone.json)
 
     def change_format(self, dict_seat: dict):
         """Documentation
