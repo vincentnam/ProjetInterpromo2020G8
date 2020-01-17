@@ -392,16 +392,14 @@ class DistPipeline:
                 for coord_seat in json_seat[img][typeseat]:
                     # get the centroid position of the seat
                     coord_centroid_seat = self.centroid_seat(coord_seat)
-                    dicimg[img][typeseat][str(coord_centroid_seat)] = {}
+                    dicimg[img][typeseat][str(coord_seat)] = {}
                     # for each obstacle type
                     for obstacle_type in json_zone[img].keys():
                         # if there is obstacles of that type of obstacle
                         if len(json_zone[img][obstacle_type]) > 0:
-                            dicimg[img][typeseat][str(coord_centroid_seat)][
-                                obstacle_type] = []
+                            dicimg[img][typeseat][str(coord_seat)][obstacle_type] = []
                             # for each coordinates in the obstacle type
-                            for coord_obstacle_type in json_zone[img][
-                                obstacle_type]:
+                            for coord_obstacle_type in json_zone[img][obstacle_type]:
                                 # get the centroid position of the obstacle
                                 coord_centroid_obstacle = self.centroid_obstacle(
                                     coord_obstacle_type)
@@ -411,10 +409,16 @@ class DistPipeline:
                                     coord_centroid_seat,
                                     coord_centroid_obstacle)
 
+                                obstacle_type_h_w_coord = (
+                                    coord_obstacle_type[1], 
+                                    coord_obstacle_type[0],
+                                    abs(coord_obstacle_type[0]-coord_obstacle_type[2]),
+                                    abs(coord_obstacle_type[1]-coord_obstacle_type[3])
+                                )
+                                    
                                 # save this distance in the dict
-                                dicimg[img][typeseat][
-                                    str(coord_centroid_seat)][
-                                    obstacle_type].append(
-                                    [coord_centroid_obstacle, distance])
+                                dicimg[img][typeseat][str(coord_seat)][obstacle_type].append(
+                                    [obstacle_type_h_w_coord, distance]
+                                )
         return dicimg
 
