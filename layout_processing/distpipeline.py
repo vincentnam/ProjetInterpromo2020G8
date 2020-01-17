@@ -18,7 +18,7 @@ class DistPipeline:
         self.pipeline_zone.json = self.merge_elements(self.pipeline_zone.json)
 
     def change_format(self, dict_seat: dict):
-        """Documentation
+        """ Change format for a dict_seat and merge every seats position into a common list
         Parameters:
             epsilon: the maximum distance between two samples for one
             to be considered as in the neighborhood of the other
@@ -38,7 +38,7 @@ class DistPipeline:
         return list_wo_dup, height_width
 
     def find_cluster(self, epsilon: int, min_sample: int, list_wo_dup: list):
-        """Documentation
+        """ Use DBScan to cluster our seat position into areas in the plane
         Parameters:
             epsilon: the maximum distance between two samples for one to be
             considered as in the neighborhood of the other
@@ -57,6 +57,12 @@ class DistPipeline:
         return (dbscan)
 
     def merge_elements(self, json_zone):
+        """ Merge the zone elements in a dictionnary in order to avoid overrides
+        Parameters:
+            json_zone: json containing the zones info 
+        Out:
+            dbscan: a merging dictionnary
+        """
         merge_dictio = {}
         for k in json_zone.keys():
             merge_dictio[k] = {}
@@ -77,7 +83,7 @@ class DistPipeline:
 
     def clusters_to_rect(self, dbscan ,
                          array_wo_dup: np.array):
-        """Documentation
+        """ Change our cluster into rectangle that represent areas where there are seats
         Parameters:
             dbscan: clustering result with DBSCAN
         Out:
@@ -112,7 +118,7 @@ class DistPipeline:
         return list_rect, list_rect2
 
     def centroid_obstacle(self, coord_obs: list):
-        """Documentation
+        """ Find the barycenter of an obstacle
         Parameters:
             coord_obs: cooardinate of the obstacle (top left and bottom right)
         Out:
@@ -124,7 +130,7 @@ class DistPipeline:
             np.mean([A_point[1], B_point[1]]))
 
     def centroid_seat(self, coord_seat: tuple):
-        """Documentation
+        """ Find the barycenter of a seat
         Parameters:
             coord_seat: cooardinate of the seat
         Out:
@@ -135,7 +141,7 @@ class DistPipeline:
         return (int(x + w / 2), int(y + h / 2))
 
     def dist_crow_flies(self, coord_bar_seat: tuple, coord_bar_obs: tuple):
-        """Documentation
+        """ Calculate a naive distance between seat tuples and obstacle tuples
         Parameters:
             coord_bar_seat: barycenter coordinate of the seat
             coord_bar_obs: barycenter cooardinate of the obstacle
@@ -147,8 +153,7 @@ class DistPipeline:
         return round(dist, 2)
 
     def AStarSearch(self, start: tuple, end: tuple, graph: AStarGraph):
-        """Documentation
-        A* algorithm to find the best path for from one point to another
+        """ A* algorithm to find the best path for from one point to another
         Parameters:
             start: Point of the start for the A* algorithm
             end: Point of the end for the A* algorithm
@@ -205,8 +210,7 @@ class DistPipeline:
                 F[neighbour] = G[neighbour] + H
 
     def create_barriers_obs(self, coord_obstacle: iter, goal: tuple):
-        """Documentation
-        Return a list of lists representing the different obstacles
+        """ Return a list of lists representing the different obstacles
         Parameters:
             coord_obstacle: coordinates of the corners of each obstacles
         Out:
@@ -233,8 +237,7 @@ class DistPipeline:
         return list_barriers
 
     def create_barriers_seat(self, corners_rect: iter, start: tuple):
-        """Documentation
-        Return a list of lists representing the different cluster of the seats
+        """ Return a list of lists representing the different cluster of the seats
         Parameters:
             corners_rect: corners of the clusters representing the seats
         Out:
@@ -261,7 +264,7 @@ class DistPipeline:
         return list_points
 
     def plane_contours(self, barriers_obs: iter, barriers_seat: iter):
-        """Documentation
+        """ Find the plane contours
         Parameters:
             barriers_obs: List of lists representing the different obstacles with all their points
             barriers_seat: List of lists representing the different cluster with all the points of the outline
@@ -300,8 +303,7 @@ class DistPipeline:
 
     def pathfinder(self, start: tuple, goal: tuple, list_rect2: iter,
                    obstacles: iter):
-        """Documentation
-        Create the graph for the A* algorithm and calculate the best path
+        """ Create the graph for the A* algorithm and calculate the best path
         Parameters:
             start: Start point for the A* algorithm
             goal: End point for the A* algorithm
@@ -329,7 +331,7 @@ class DistPipeline:
 
     def draw_path(self, path: str, img: str, obs_number: int, seat_number: int,
                   obstacle: list, json_seat: dict):
-        """Documentation
+        """Draw the path between an obstacle and a seat
         Parameters:
             path: folder path
             img: image name
@@ -371,10 +373,11 @@ class DistPipeline:
         plt.show()
 
     def to_json_simple_distance(self, json_seat: dict, json_zone: dict):
-        """Documentation
+        """ Calculate the distances between the barycenter between the obstacles and seats 
+            and add the result in a dictionnary.
         Parameters:
-            pipeline_zone.json: json ???
-            pipeline.json: json ???
+            pipeline_zone.json: json containing zones info
+            pipeline.json: json containing seats info
         Out:
             dicimg: json final structure
         """

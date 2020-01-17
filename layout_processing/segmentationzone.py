@@ -16,7 +16,13 @@ class SegmentationZone(Process):
         super().__init__(*args, **kwargs)
 
     def image_process_label(self, image):
-        # grayscale = rgb2gray(image)
+        """
+            Make processes the image to retrieve easily information
+            Parameters:
+                image: image chosen
+            Out :
+                An processed image
+        """
         thresh = threshold_otsu(image)
         bw = closing(image > thresh, square(2))
         cleared = clear_border(bw)
@@ -25,11 +31,19 @@ class SegmentationZone(Process):
 
     def label_results(self, image, json, data_image=None,
                       min_rectangle_area=80):
-        # the result will be store in this list
-        image_detection_result = []
+        """
+            Retrieve information concerning an specific area
+            Parameters:
+                image: image chosen
+                json : json containing the image info
+                data_image : data path
+                min_rectangle_area : minimum dimension area, 80 by default
+            Out :
+                A list of rectangles representing specific elements in the image
+        """
+
         if data_image is None:
             print("Data_image is None")
-        # get the image
 
         # get the different area
         label_image = self.image_process_label(image)
@@ -38,16 +52,6 @@ class SegmentationZone(Process):
         # prepare the image info
         json[data_image.split('/')[-1]] = {"areas": [], "rectangles": [],
                                            "diameters": [], "coordinates": []}
-        #         image_detection_result.append({
-        #             'image_name': image_path.split('/')[-1],
-        #             "areas": [],
-        #             "rectangles": [],
-        #             "diameters": [],
-        #             "coordinates": []
-        #         })
-
-        # the last index in the list
-        len_list = len(image_detection_result) - 1
 
         # by region find every rectangle that will interesting us
         for region in props:
@@ -62,10 +66,16 @@ class SegmentationZone(Process):
                     region['Coordinates'])
 
     def image_detection_result(self, image_name, im_pre, limit_area):
-        # image_name : image chosen
-        # data_path : path to access those images
-        # layouts : seatguru or seatmaestro
-        # limit_area : minimum dimension area, 80 by default
+        """
+            Detect every rectangle in the image nearby specific elements
+            Parameters:
+                image_name : image chosen
+                data_path : path to access those images
+                layouts : seatguru or seatmaestro
+                limit_area : minimum dimension area, 80 by default
+            Out :
+                A list of rectangles representing specific elements in the image
+        """
 
         # the result will be store in this list
         image_detection_result = []
@@ -103,24 +113,23 @@ class SegmentationZone(Process):
         return image_detection_result
 
     def coord_template_matching_image_single(self, image, json, liste_temp,
-                                             path_temp, image_name, threshold,
-                                             limit_area=80):
-        # liste_temp : list of templates
-        # path_temp : path to access the list of templates
-        # image_name : image
-        # data_path : path to access the image
-        # layouts : list of layouts
-        # threshold : chosen, by default 0.9
-        # limit_area : minimum dimension area, 80 by default
+                                             path_temp, image_name, threshold):
+        """
+            Recognize every specific elements in the image with a template analysis
+            Parameters:
+                image : image chosen
+                json : json containing image info
+                liste_temp : list of templates
+                path_temp : path to access the list of templates
+                image_name : image
+                threshold : chosen, by default 0.9
+            Out : 
+                A list of specific elements in the image
+        """
+        
 
         # Initialize the dictionnary which will display the results
         temp_rcgnzd = {}
-        # print(json[image_name])
-        # Pre-process the image
-
-        # Image rgb to gray
-
-        dict_data = self.image_detection_result(image_name, image, limit_area)
 
         # Initialize dictionnary of templates type for the image
         type_temp = {}
@@ -128,25 +137,24 @@ class SegmentationZone(Process):
         for templ in liste_temp:
             # Initialize list of (all) coordinates for each recognized template
             liste_position = []
+            
             # Open template
             template = cv.imread(path_temp + templ, 0)
-            h, w = template.shape
 
-            # List of match
+            # List of matches
             res = cv.matchTemplate(image, template, cv.TM_CCOEFF_NORMED)
 
+            # Position that pattern match with our templates
             position = [pos for pos in zip(*np.where(res >= threshold)[::-1])]
 
+            # for each position
             for pos in position:
-                # Draw rectangle around recognized element
-                # cv.rectangle(
-                #     image, pos, (pos[0] + w, pos[1] + h), (255, 255, 255), 2)
-
+                # for each rectangle representing a position
                 for rect in json[image_name]['rectangles']:
-
+                    # if the rect in outside the position 
                     if rect[1] < pos[0] < rect[3] \
                             and rect[0] < pos[1] < rect[2]:
-
+                        # we  add the rectangle to our list of positions
                         if rect not in liste_position:
                             liste_position.append(rect)
 
@@ -158,6 +166,19 @@ class SegmentationZone(Process):
 
     def run(self, image, json, image_rgb=None, col_obj=None, templates=None,
             data_image=None, image_name=None, **kwargs) -> None:
+        """
+            Main of this class
+            Parameters:
+                image : image chosen
+                json : json containing image information
+                image_rgb : image in rgb
+                col_obj : a Colour object
+                templates : the templates
+                data_image : dont know sir
+                image_name : image name
+            Out :
+                A list of specific elements in the image
+        """
         plt.imshow(image)
         plt.show()
         self.label_results(image, json, data_image)

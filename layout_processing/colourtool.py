@@ -85,8 +85,12 @@ class Colour:
         self.util_obj = ImageUtil(self.input_path + self.layout + '/',
                                   self.image_name)
 
-    # Setter for image update on preprocess
+    
     def set_image(self, image):
+        """
+            Setter for image update on preprocess
+                image : image that we take for make a change
+        """
         self.image = image
         self.util_obj.set_image(image)
 
