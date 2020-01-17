@@ -274,6 +274,7 @@ class Pipeline:
         :param images: objet array-like : contient la liste de images
         :return: None
         """
+        print(images)
         for image in images:
             print("Début du pipeline : ")
             for num, pre_process in enumerate(self.pre_process):
