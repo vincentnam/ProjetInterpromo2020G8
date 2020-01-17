@@ -120,7 +120,7 @@ class SegmentationZone(Process):
 
         # Image rgb to gray
 
-        dict_data = self.image_detection_result(image_name, image, 80)
+        dict_data = self.image_detection_result(image_name, image, limit_area)
 
         # Initialize dictionnary of templates type for the image
         type_temp = {}
@@ -163,7 +163,8 @@ class SegmentationZone(Process):
         self.label_results(image, json, data_image)
         temp_zone_fold_path = "./images/zone_templates/"
         list_temp = [name_template for name_template in
-                     os.listdir(temp_zone_fold_path)]
+                     os.listdir(temp_zone_fold_path) 
+                     if 'png' in name_template]
         print(list_temp)
         self.coord_template_matching_image_single(
             image, json,
