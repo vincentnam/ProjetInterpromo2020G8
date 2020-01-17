@@ -1,12 +1,13 @@
 import sklearn
 import numpy as np
 from matplotlib import patches
-from sklearn.cluster import DBSCAN
+
 from .astargraph import AStarGraph
 import matplotlib.pyplot as plt
 import cv2 as cv
 from gensim.parsing.preprocessing import strip_numeric, strip_non_alphanum
 import pandas as pd
+from sklearn.cluster import DBSCAN
 
 
 class DistPipeline:
@@ -74,7 +75,7 @@ class DistPipeline:
         return merge_dictio
 
 
-    def clusters_to_rect(self, dbscan: sklearn.cluster.dbscan_.DBSCAN,
+    def clusters_to_rect(self, dbscan ,
                          array_wo_dup: np.array):
         """Documentation
         Parameters:
