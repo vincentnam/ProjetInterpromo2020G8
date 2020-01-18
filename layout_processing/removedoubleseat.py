@@ -2,14 +2,22 @@ from .postprocess import Postprocess
 
 
 class RemoveDoubleSeat(Postprocess):
+    """Documentation
+    To remove the duplicated detected seats.
+    """
     process_desc = "Standard Python >= 3.5 -> remove double point in list"
 
     def __init__(self, *args, **kwargs):
+        """
+        Documentation
+        Constructor.
+        """
         super().__init__()
 
     def remove_duplicate(self, coordinate: list):
         """Documentation
-        Parameters:
+        To remove the duplicated detected seats.
+        Parameters
             coordinate: original coordinates without treatment
         Out:
             dup: list of coordinate which are duplicated
@@ -31,6 +39,10 @@ class RemoveDoubleSeat(Postprocess):
 
         return coordinate
 
-    def run(self, json, **kwargs):
+    def run(self, json: dict, **kwargs):
+        """
+        Documentation
+        To run the removedoubleseat.
+        """
         for seat_index in json:
             json[seat_index] = self.remove_duplicate(json[seat_index])

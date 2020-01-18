@@ -7,9 +7,19 @@ import cv2 as cv
 
 
 class SeatFinder(Process):
+    """
+    Documentation
+    
+    """
     process_desc = "OpenCV4.1.2.30 -> Pattern Matching seat"
 
-    def __init__(self, csv_data_path=None, *args, **kwargs):
+    def __init__(self, csv_data_path: str=None, *args, **kwargs):
+        """
+        Documentation
+        Constructor.
+        Parameter:
+            csv_data_path: path of the csv containing the data
+        """
         if csv_data_path is None:
             raise Exception("Data_path is empty in init function of " + str(
                 self.__class__))
@@ -19,23 +29,25 @@ class SeatFinder(Process):
         self.seatguru_image_data_path = self.layout_folder_path + "LAYOUT SEATGURU/"
         self.seatmaestro_image_data_path = self.layout_folder_path + "LAYOUT SEATMAESTRO/"
 
-    def hasNumbers(self, inputString):
+    def hasNumbers(self, inputString: str):
         """
-            Allow us to know if a string contains a number
-            Parameters
-                inputString: input string
-            Out :
-                return a boolean, true if the string contains an int, else false
+        Documentation
+        Allow us to know if a string contains a number
+        Parameter:
+            inputString: input string
+        Out :
+            return a boolean, true if the string contains an int, else false
         """
         return any(char.isdigit() for char in inputString)
 
-    def longestValue(self, inputList):
+    def longestValue(self, inputList: list):
         """
-            Takes the longest string in a list of strings
-            Parameters
-                inputString: input list of strings
-            Out :
-                Return the longest string in the list of strings
+        Documentation
+        Takes the longest string in a list of strings
+        Parameter:
+            inputList: input list of strings
+        Out :
+            Return the longest string in the list of strings
         """
         if len(inputList) > 0:
             max_len = 0
@@ -45,17 +57,18 @@ class SeatFinder(Process):
             return inputList[max_len]
         return 0
 
-    def get_relevant_aircraft_builders(self, image_names,
-                                       proportion_min=0.02,
-                                       proportion_max=0.75):
+    def get_relevant_aircraft_builders(self, image_names: list,
+                                       proportion_min: float=0.02,
+                                       proportion_max: float=0.75):
         """
-            Takes the longest string in a list of strings
-            Parameters
-                image_names: input list of strings
-                proportion_min : proportion minimum to consider aircraft builder
-                proportion_max : proportion maximum to consider aircraft builder
-            Out :
-                Return a dictionnary containing relevant aircraft builders
+        Documentation
+        Takes the longest string in a list of strings
+        Parameters:
+            image_names: input list of strings
+            proportion_min : proportion minimum to consider aircraft builder
+            proportion_max : proportion maximum to consider aircraft builder
+        Out :
+            Return a dictionnary containing relevant aircraft builders
         """
         # retrieve aircraft builders types
         aircraft_builders = np.unique(
@@ -93,21 +106,22 @@ class SeatFinder(Process):
                                           key=lambda item: item[1])}
         return relevant_aircraft_builders
 
-    def get_airline_aircraft_builder_pos(self, image_names, aircraft_builders,
-                                         airlines, aircraft_ref, pattern,
-                                         layout="LAYOUT SEATGURU/"):
+    def get_airline_aircraft_builder_pos(self, image_names: iter, aircraft_builders: float,
+                                         airlines: float, aircraft_ref: str, pattern,
+                                         layout: str="LAYOUT SEATGURU/"):
 
         """
-            Find aircraft builder position in the image name and store it in a dictionnary
-            Parameters
-                image_names: input list of strings
-                aircraft_builders : proportion minimum to consider aircraft builder
-                airlines : proportion maximum to consider aircraft builder
-                aircraft_ref : aircraft references
-                pattern : determine which splitter we want to take
-                layout : layout to select the right dataset
-            Out :
-                Return a dictionnary containing relevant aircraft builders
+        Documentation
+        Find aircraft builder position in the image name and store it in a dictionnary
+        Parameters
+            image_names: input list of strings
+            aircraft_builders : proportion minimum to consider aircraft builder
+            airlines : proportion maximum to consider aircraft builder
+            aircraft_ref : aircraft references
+            pattern : determine which splitter we want to take
+            layout : layout to select the right dataset
+        Out :
+            Return a dictionnary containing relevant aircraft builders
         """
         # Initialisation of dict
         dictio_airlines_aircraft_builders = []
@@ -158,13 +172,14 @@ class SeatFinder(Process):
 
         return dictio_airlines_aircraft_builders
 
-    def main_layout_seatguru(self, layout="LAYOUT SEATGURU/"):
+    def main_layout_seatguru(self, layout: str="LAYOUT SEATGURU/"):
         """
-            Retrieve meta-data about each image containing in the layout folder
-            Parameters :
-                layout : type of layout to select the right dataset
-            Out :
-                return a dataframe containing the meta-data about an image
+        Documentation
+        Retrieve meta-data about each image containing in the layout folder
+        Parameter:
+            layout: type of layout to select the right dataset
+        Out :
+            return a dataframe containing the meta-data about an image
         """
         image_name_list = [img for img in
                            os.listdir(self.layout_folder_path + layout)]
@@ -190,13 +205,14 @@ class SeatFinder(Process):
             '_')
         return pd.DataFrame(dictio_airlines_aircraft_builders)
 
-    def get_correspondance(self, dataframe):
+    def get_correspondance(self, dataframe: pd.DataFrame):
         """
-            Make a correspondance between the csv file and our image to get extra information
-            Parameters :
-                dataframe : dataframe containing image info
-            Out :
-                return a dataframe containing the meta-data about an image
+        Documentation
+        Make a correspondance between the csv file and our image to get extra information
+        Parameter:
+            dataframe : dataframe containing image info
+        Out :
+            return a dataframe containing the meta-data about an image
         """
         # retrieve aircraft builders
         aircraft_builders = dataframe['aircraft_builder'].tolist()
@@ -240,14 +256,15 @@ class SeatFinder(Process):
                 dictio[im] = pd.DataFrame(columns=['Category', 'Count', 'Seat_Type'])
         return dictio
 
-    def retrieve_relevant_seat_info(self, dictio, image_name):
+    def retrieve_relevant_seat_info(self, dictio: dict, image_name: str):
         """
-            Retrieve the relevant cross information between csv file and an image
-            Parameters :
-                dictio : dictionnary that contains correspondance information
-                image_name : image name
-            Out :
-               Add seat information as Count, Category and Seat_Type
+        Documentation
+        Retrieve the relevant cross information between csv file and an image
+        Parameters:
+            dictio : dictionnary that contains correspondance information
+            image_name : image name
+        Out :
+            Add seat information as Count, Category and Seat_Type
         """
         total_seat_info = []
         for i, row in dictio[image_name].iterrows():
@@ -258,15 +275,16 @@ class SeatFinder(Process):
             })
         return total_seat_info
 
-    def coord_pattern_finder(self, image, template, threshold: float):
+    def coord_pattern_finder(self, image: iter, template: iter, threshold: float):
         """
-            Find a position by pattern matching a template on an image
-            Parameters:
-                image : image plane cv.imread() black and white
-                template : image pattern cv.imread() black and white
-                threshold : threshold for this pattern
-            Out :
-                position : list right angle position for this pattern on the image
+        Documentation
+        Find a position by pattern matching a template on an image
+        Parameter:
+            image : image plane cv.imread() black and white
+            template : image pattern cv.imread() black and white
+            threshold : threshold for this pattern
+        Out :
+            position : list right angle position for this pattern on the image
         """
         position = []  # Variable output
         # List of match
@@ -277,17 +295,18 @@ class SeatFinder(Process):
 
         return (position)
 
-    def templ_category(self, path='./images/TEMPLATE/', category='BUSINESS',
-                       seat_type='STANDARD', plane_name='test.jpg'):
+    def templ_category(self, path: str='./images/TEMPLATE/', category: str='BUSINESS',
+                       seat_type: str='STANDARD', plane_name: str='test.jpg'):
         """
-            Create list of template open with cv by category and seatType
-            Parameters :
-                Path: directory path of templates
-                category: name of category
-                seatType: Seat type
-                planeName: plane name
-            Out :
-                templates: list of template name
+        Documentation
+        To create list of template open with cv by category and seatType
+        Parameters :
+            Path: directory path of templates
+            category: name of category
+            seatType: Seat type
+            planeName: plane name
+        Out :
+            templates: list of template name
         """
         if '.png' in plane_name:
             extension = 'PNG/'
@@ -303,15 +322,16 @@ class SeatFinder(Process):
                     path + category + '/' + extension + i, 0))
         return (templates)
 
-    def template_from_template(self, img, template, thresholdMin=0.70):
+    def template_from_template(self, img: iter, template: iter, thresholdMin=0.70):
         """
-
-            Parameters :
-                img : image plane
-                template : template
-                thresholdMin : threshold min to keep template or not
-            Out :
-                template, boolean : true if found
+        Documentation
+        
+        Parameters:
+            img : image plane
+            template : template
+            thresholdMin : threshold min to keep template or not
+        Out :
+            template, boolean : true if found
         """
         # default Threshold
         threshold = 1
@@ -330,11 +350,12 @@ class SeatFinder(Process):
 
     def count_list(self, list):
         """
-            Sort a dict
-            Parameters :
-                list : list
-            Out :
-                ordered list with single occurence
+        Documentation
+        Sort a dict
+        Parameters :
+            list : list
+        Out :
+            ordered list with single occurence
         """
         dictio_count = {}
         for el in list:
@@ -343,17 +364,19 @@ class SeatFinder(Process):
                                         key=lambda item: item[1],
                                         reverse=True)}
 
-    def best_position(self, img, template, nbSeat, step=0.005,
-                      thresholdMin=0.65):
+    def best_position(self, img: iter, template: iter, nbSeat: int, 
+                      step: float=0.005, thresholdMin=0.65):
         """
-            Find the best position for the seat by considering the template
-            Parameters :
-                img : image plane
-                template : template find from this image
-                nbSeat : integrer - for this cat
-                steps : steps for threshold
-            Out :
-                coord for each match
+        Documenation
+        Find the best position for the seat by considering the template
+        Parameters:
+            img : image plane
+            template : template find from this image
+            nbSeat : number of seatt
+            steps : steps for threshold
+            thresholdMin : threshold min to keep template or not
+        Out :
+            coord for each match
         """
         position = []
         for threshold in np.arange(thresholdMin, 1 + step, step):
@@ -364,18 +387,20 @@ class SeatFinder(Process):
             return (result)
         return (result[:int(nbSeat * 1.1)])
 
-    def run(self, image, json, image_name=None,
-            layout=["LAYOUT SEATGURU/", "LAYOUT SEATMAESTRO/"],
-            path='./images/', **kwargs):
+    def run(self, image: iter, json: dict, image_name: str=None,
+            layout: list=["LAYOUT SEATGURU/", "LAYOUT SEATMAESTRO/"],
+            path: str='./images/', **kwargs):
         """
-            Parameters :
-                image : image plane
-                json : json containing image information
-                image_name : image name
-                layout : layout type
-                path : path for template directory
-            Out :
-                diction : dictionnary
+        Documentation
+        
+        Parameters :
+            image : image plane
+            json : json containing image information
+            image_name : image name
+            layout : layout type
+            path : path for template directory
+        Out :
+            dictionnary
         """
 
         if not image_name in json.keys():

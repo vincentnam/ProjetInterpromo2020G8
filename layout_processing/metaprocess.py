@@ -5,11 +5,15 @@ from typing import Iterable
 
 def overrides(method):
     """
+    Documentation
     Decorator implementation for overriding
-    Come frome : https://stackoverflow.com/questions/1167617/
+    Attribute:
+        method: the method to overrides
+    Out:
+        the proper version of the method
+    Reference:
+        1. https://stackoverflow.com/questions/1167617/
     in-python-how-do-i-indicate-im-overriding-a-method
-    :param method: the method to overrides
-    :return: the proper version of the method
     """
     # actually can't do this because a method is really
     # just a function while inside a class def'n
@@ -50,13 +54,20 @@ def overrides(method):
 
 
 class NotProcessClass(Exception):
-    def __init__(self, expression, message):
+    """
+    Documentation
+    Exception class to handle problem of object insertion in pipeline
+    Attributes:
+        process_desc -- process descrition to print
+        process_class -- process class to print
+    """
+    def __init__(self, expression: str, message: str):
         """
-        Exception class to handle problem of object insertion in
-        pipeline
-        Attributes:
-            process_desc -- process descrition to print
-            process_class -- process class to print
+        Documentation
+        Constructor.
+        Parameters:
+            expression: expression to print
+            message: message to print
         """
         self.expression = expression
         self.message = message
@@ -64,12 +75,14 @@ class NotProcessClass(Exception):
 
 class MetaProcess(metaclass=ABCMeta):
     """
+    Documentation
     Metaclass for process definition. Used to define a process behaviour
     to be able to make a pipeline of processes. (Cf. Pipeline class)
     """
 
     def check_attributes(self):
         """
+        Documentation
         Check if attributes is defined and not empty. Raise an error
         if not defined.
         """
@@ -77,11 +90,12 @@ class MetaProcess(metaclass=ABCMeta):
             raise NotImplementedError("Définissez une description pour "
                                       + "le process.")
 
-    def __init__(self, verbose=1, *args, **kwargs):
+    def __init__(self, verbose: int=1, *args, **kwargs):
         """
+        Documentation
         MetaProcess constructor. Check if process_desc is implemented.
-        :param verbose: int : >0 implies a printing of process_desc
-        when called.
+        Parameters:
+            verbose: >0 implies a printing of process_desc when called.
         """
         self.verbose = verbose
         self.check_attributes()
@@ -94,6 +108,7 @@ class MetaProcess(metaclass=ABCMeta):
     @abstractmethod
     def process_desc(self):
         """
+        Documentation
         Abstract attribute defining a process definition. The process
         description printing can be avoid by setting "verbose=0".
         This attribute is used to describe the computation and the
@@ -102,11 +117,13 @@ class MetaProcess(metaclass=ABCMeta):
         return self.process_desc
 
     @abstractmethod
-    def run(self, image: Iterable, **kwargs) -> None:
+    def run(self, image: iter, **kwargs) -> None:
         """
+        Documentation
         Run function and do the computation of the class. This function
         is used in pipeline and only this is launched in pipeline. Work
         as a main and parameters are filled with **kwargs dictionnary.
-        :param image: image to process : objet array-like
+        Parameter:
+            image: image to process, objet array-like
         """
 

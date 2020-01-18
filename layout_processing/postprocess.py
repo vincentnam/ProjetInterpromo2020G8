@@ -5,6 +5,7 @@ from typing import Iterable
 
 class Postprocess(MetaProcess):
     """
+    Documentation
     Abstract class to define a postprocess.
     To define a new post-process, it is needed to define process
     description and run function has to be implemented as the main
@@ -22,11 +23,19 @@ class Postprocess(MetaProcess):
     process_desc = None
 
     def __init__(self):
+        """
+        Documentation
+        Constructor.
+        """
         super().__init__()
 
     @overrides
     @abstractmethod
-    def run(self, image: Iterable, json: dict, **kwargs) -> None:
+    def run(self, image: iter, json: dict, **kwargs) -> None:
+        """
+        Documentation
+        
+        """
         super()
         pass
 

@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 from .utiltool import ImageUtil
 
+
 # Global variable : colors dictionnary for layout : used by colors
-# preprocess - to determine wich colors has to be kept has element
+# preprocess - to determine wich colors has to be kept as element
 # color in the image
 COLOURS = {
     'LAYOUT SEATGURU': {
@@ -39,21 +40,23 @@ COLOURS = {
 
 class Colour:
     """
+    Documentation
     Tool class : used to make transformations over images
     """
 
-    def __init__(self, csv_data_path, layout, image_name):
+    def __init__(self, csv_data_path: str, layout: iter[str], image_name: str):
         """
+        Documentation
         Constructor for Colour class ; tool box for image preprocessing.
         Can be extended to add preprocesses easily.
-        :param csv_data_path: str : input path to the base folder
+        Parameters:
+            csv_data_path: input path to the base folder
         containing the csv. Folder architecture is based on the archive
         given at the project beginning (i.e. "ProjetInterpromo2020"
         containing sub folder :  "All\ Data" -> "ANALYSE\ IMAGE/" and
         sub folder with the layout from website.
-        :param layout: Iterable[str] : list of layout to process /
-        list of str that are folders name.
-        :param image_name: str : file name of the image to work on
+            layout: list of layout to process/list of str that are folders name.
+            image_name: file name of the image to work on
         """
 
         # Path of the base folder containing all sub folder : sub-folder
@@ -86,32 +89,35 @@ class Colour:
                                   self.image_name)
 
     
-    def set_image(self, image):
+    def set_image(self, image: iter):
         """
-            Setter for image update on preprocess
-                image : image that we take for make a change
+        Documentation
+        Setter for image update on preprocess
+        Parameter:
+            image : image that we take for make a change
         """
         self.image = image
         self.util_obj.set_image(image)
 
-    def colour_detection(self, colours, epsilon, rgb_len, colour_mode,
-                         default_colour):
+    def colour_detection(self, colours: dict, epsilon: int, rgb_len: list, 
+                         colour_mode: bool, default_colour: int):
         """
-            This function will detect the colour and will do some pre-process
-            on it params :
-                colours : a dictionnary with a list of specified colours
-                epsilon : threshold that allows to consider a colour from *
-                another one as close
-                rgb_len : only take the 3 first elements from pixel (RGB norm)
-                colour_mode :
-                    if true : it means that if we consider a colour from
-                    the image close to a colour from the "colours" dict,
-                    then it will replace the colour by the one in the dict.
-                    if false : it means that if we consider a colour from
-                    the image close to a colour from the "colours" dict,
-                     then it will replace the colour by the default
-                      color value.
-                default_color : default color value that a pixel has to take
+        Documentation
+        This function will detect the colour and will do some pre-process
+        on it params
+        Parameters:
+            colours : a dictionnary with a list of specified colours
+            epsilon : threshold that allows to consider a colour from *
+            another one as close
+            rgb_len : only take the 3 first elements from pixel (RGB norm)
+            colour_mode :
+                if true : it means that if we consider a colour from
+                the image close to a colour from the "colours" dict,
+                then it will replace the colour by the one in the dict.
+                if false : it means that if we consider a colour from
+                the image close to a colour from the "colours" dict,
+                then it will replace the colour by the default color value.
+            default_color : default color value that a pixel has to take
         """
         # make a copy to avoid to erase the original image
         img_copy = self.util_obj.to_rgb()
@@ -148,28 +154,31 @@ class Colour:
                             img_copy[i][j] = default_colour
         return img_copy
 
-    def colour_pipeline(self, colours={}, epsilon=20, colour_mode=True,
-                        default_colour=[0, 0, 0], rgb_len=3):
+    def colour_pipeline(self, colours: dict={}, epsilon: int=20, colour_mode=True,
+                        rgb_len=[0, 0, 0], default_color: int=3):
         """
-            Call colour_detection function in order to pre-process
-            colours in image.
-            params :
-                colours : dict : a dictionnary with a list of specified colours
-                epsilon : int : threshold that allows to consider a colour
-                from another one as close
-                rgb_len : List :  only take the 3 first elements from pixel
-                (RGB norm)
-                colour_mode : bool :
-                    - if true (highlight colours in "colours" dict by
-                    standardize it) : it means that if we consider a
-                     colour from the image close to a colour from the
-                     "colours" dict, then it will replace the colour by
-                     the one in the dict.
-                    - if false (remove colours in "colours" dict by the
-                     default one) : it means that if we consider a colour
-                      from the image close to a colour from the "colours" dict,
-                    then it will replace the colour by the default color value.
-                default_color : default color value that a pixel has to take
+        Documentation
+        Call colour_detection function in order to pre-process
+        colours in image.
+        Parameters:
+            colours: a dictionnary with a list of specified colours
+            epsilon : threshold that allows to consider a colour
+            from another one as close
+            rgb_len : only take the 3 first elements from pixel
+            (RGB norm)
+            colour_mode: 
+                if true (highlight colours in "colours" dict by
+                standardize it) : it means that if we consider a
+                colour from the image close to a colour from the
+                "colours" dict, then it will replace the colour by
+                the one in the dict.
+                if false (remove colours in "colours" dict by the
+                default one) : it means that if we consider a colour
+                from the image close to a colour from the "colours" dict,
+                then it will replace the colour by the default color value.
+            default_color : default color value that a pixel has to take
+        Out:
+            image_res:
         """
         # if colours is empty we take the default value
         if not bool(colours):

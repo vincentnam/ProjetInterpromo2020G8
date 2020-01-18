@@ -10,18 +10,21 @@ import os
 
 
 class SegmentationZone(Process):
+    """Documentation
+    
+    """
     process_desc = "OpenCV4.1.2.30 / Scikit-image 0.16-> segmentation over colour areas"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def image_process_label(self, image):
-        """
-            Make processes the image to retrieve easily information
-            Parameters:
-                image: image chosen
-            Out :
-                An processed image
+    def image_process_label(self, image: iter):
+        """Documentation
+        Make processes the image to retrieve easily information
+        Parameter:
+            image: image chosen
+        Out:
+            A processed image
         """
         thresh = threshold_otsu(image)
         bw = closing(image > thresh, square(2))
@@ -29,17 +32,18 @@ class SegmentationZone(Process):
         label_image = label(cleared)
         return label_image
 
-    def label_results(self, image, json, data_image=None,
-                      min_rectangle_area=80):
+    def label_results(self, image: iter, json: dict, data_image: str=None,
+                      min_rectangle_area: int=80):
         """
-            Retrieve information concerning an specific area
-            Parameters:
-                image: image chosen
-                json : json containing the image info
-                data_image : data path
-                min_rectangle_area : minimum dimension area, 80 by default
-            Out :
-                A list of rectangles representing specific elements in the image
+        Documentation
+        Retrieve information concerning an specific area
+        Parameters:
+            image: image chosen
+            json : json containing the image info
+            data_image : data path
+            min_rectangle_area : minimum dimension area, 80 by default
+        Out :
+            A list of rectangles representing specific elements in the image
         """
 
         if data_image is None:
@@ -65,16 +69,16 @@ class SegmentationZone(Process):
                 json[data_image.split('/')[-1]]['coordinates'].append(
                     region['Coordinates'])
 
-    def image_detection_result(self, image_name, im_pre, limit_area):
+    def image_detection_result(self, image_name: str, im_pre: iter, limit_area: int):
         """
-            Detect every rectangle in the image nearby specific elements
-            Parameters:
-                image_name : image chosen
-                data_path : path to access those images
-                layouts : seatguru or seatmaestro
-                limit_area : minimum dimension area, 80 by default
-            Out :
-                A list of rectangles representing specific elements in the image
+        Documentation
+        Detect every rectangle in the image nearby specific elements
+        Parameters:
+            image_name : image chosen
+            im_pre: 
+            limit_area : minimum dimension area, 80 by default
+        Out :
+            A list of rectangles representing specific elements in the image
         """
 
         # the result will be store in this list
@@ -112,19 +116,20 @@ class SegmentationZone(Process):
 
         return image_detection_result
 
-    def coord_template_matching_image_single(self, image, json, liste_temp,
-                                             path_temp, image_name, threshold):
+    def coord_template_matching_image_single(self, image: iter, json: dict, liste_temp: list,
+                                             path_temp: str, image_name: str, threshold: float):
         """
-            Recognize every specific elements in the image with a template analysis
-            Parameters:
-                image : image chosen
-                json : json containing image info
-                liste_temp : list of templates
-                path_temp : path to access the list of templates
-                image_name : image
-                threshold : chosen, by default 0.9
-            Out : 
-                A list of specific elements in the image
+        Documentation
+        Recognize every specific elements in the image with a template analysis
+        Parameters:
+            image : image chosen
+            json : json containing image info
+            liste_temp : list of templates
+            path_temp : path to access the list of templates
+            image_name : image
+            threshold : chosen, by default 0.9
+        Out : 
+            A list of specific elements in the image
         """
         
 
@@ -164,20 +169,21 @@ class SegmentationZone(Process):
 
         json[image_name] = temp_rcgnzd[image_name]
 
-    def run(self, image, json, image_rgb=None, col_obj=None, templates=None,
-            data_image=None, image_name=None, **kwargs) -> None:
+    def run(self, image: iter, json: dict, image_rgb: iter=None, col_obj: str=None, 
+            templates: iter=None, data_image=None, image_name: str=None, **kwargs) -> None:
         """
-            Main of this class
-            Parameters:
-                image : image chosen
-                json : json containing image information
-                image_rgb : image in rgb
-                col_obj : a Colour object
-                templates : the templates
-                data_image : dont know sir
-                image_name : image name
-            Out :
-                A list of specific elements in the image
+        Documentation
+        Main of this class
+        Parameters:
+            image : image chosen
+            json : json containing image information
+            image_rgb : image in rgb
+            col_obj : a Colour object
+            templates : the templates
+            data_image : 
+            image_name : image name
+        Out :
+            A list of specific elements in the image
         """
         plt.imshow(image)
         plt.show()

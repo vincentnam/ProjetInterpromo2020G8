@@ -1,21 +1,26 @@
 class AStarGraph(object):
-    """Documentation
-    Class to create the graph for the execution of the A* algorithm
+    """
+    Documentation
+    To create the graph for the execution of the A* algorithm
+    Reference:
+        https://rosettacode.org/wiki/A*_search_algorithm
     """
 
     # Define a class board like grid with two barriers
     def __init__(self, barriers: list):
-        """Documentation
+        """
+        Documentation
         Assign the barriers for the object graph
-        Parameters:
+        Parameter:
             barriers: list of lists of tuples. Each list corresponds to
             the points that constitute the obstacles.
         """
         self.barriers = barriers
 
     def heuristic(self, start: tuple, goal: tuple):
-        """Documentation
-        Function to calculate the distance between the start and end point
+        """
+        Documentation
+        To calculate the distance between the start and end point
         Parameters:
             start: Point of the start for the A* algorithm
             goal: Point of the end for the A* algorithm
@@ -31,10 +36,11 @@ class AStarGraph(object):
         return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
 
     def get_vertex_neighbours(self, pos: tuple):
-        """Documentation
-        Returns the neighbouring points according to the four movements
+        """
+        Documentation
+        Return the neighbouring points according to the four movements
         in front, right, left and back
-        Parameters:
+        Parameter:
             pos: Current point
         Out:
             n: All neighbour points
@@ -50,7 +56,8 @@ class AStarGraph(object):
         return n
 
     def move_cost(self, a: tuple, b: tuple):
-        """Documentation
+        """
+        Documentation
         Calculate the cost of a move to a neighbour
         Parameters:
             a: Current point

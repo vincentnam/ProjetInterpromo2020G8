@@ -5,6 +5,7 @@ from typing import Iterable
 
 class Process(MetaProcess):
     """
+    Doumentation
     Abstract class to define a preprocess.
     To define a new process, it is needed to define process
     description and run function has to be implemented as the main
@@ -21,16 +22,21 @@ class Process(MetaProcess):
     process_desc = None
 
     def __init__(self, *args, **kwargs):
+        """
+        Documentation
+        Constructor
+        """
         super().__init__(*args, **kwargs)
 
     @overrides
     @abstractmethod
-    def run(self, image: Iterable, json: dict, **kwargs) -> None:
+    def run(self, image: iter, json: dict, **kwargs) -> None:
         """
-
-        :param image: Iterable : image preprocessed
-        :param json:  dict : input/output parameter : the dictionnary
-        to fill with informations
+        Documentation
+        Parameters:
+            image: image preprocessed
+            json: input/output parameter, the dictionnary
+            to fill with informations
         """
         pass
 

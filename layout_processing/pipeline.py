@@ -13,23 +13,23 @@ from .colourtool import Colour, COLOURS
 
 class Pipeline:
     """
+    Documentation
     Pipeline class : define the process order (pre-process -> process
     -> post process) and informations exchanges between processes.
     To add a process, add_processes take a list of processes even if
     this list contain only 1 process.
     """
 
-    def __init__(self, data_path, list_images_name: Iterable[str] = None,
-                 layouts: Iterable[str] =
+    def __init__(self, data_path, list_images_name: iter[str] = None,
+                 layouts: iter[str] =
                  ['LAYOUT SEATGURU', 'LAYOUT SEATMAESTRO']) -> None:
         """
+        Documentation
         Pipeline constructor
-        :param data_path: str : path to the base folder directly
-        extracted from the .zip archive
-        :param list_images_name: Iterable[str] : list of files images
-        to make the pipeline on.
-        :param layouts: Iterable[str] : list of layout folder to
-        consider
+        Parameters:
+            data_path: path to the base folder directly extracted from the .zip archive
+            list_images_name: list of files images to make the pipeline on.
+            layouts: list of layout folder to consider
         """
         self.pre_process: Iterable[type] = np.array([])
         self.process: Iterable[type] = np.array([])
@@ -46,12 +46,13 @@ class Pipeline:
         self.layout_folder_path = self.csv_path + "ANALYSE IMAGE/"
         self.image_folder_path = self.layout_folder_path + layouts[0] + "/"
 
-    def add_processes(self, in_process: Iterable):
+    def add_processes(self, in_process: iter):
         """
+        Documentation
         Add a list of processes in the pipeline. Processes are run in
         the same order that they are processed
-        :param in_process: Iterable[MetaProcess] : Liste des process à
-        ajouter au pipeline. Chaque
+        Parameter:
+            in_process: list of process to add at the pipeline
         """
         wrong_processes: tuple = ()
         for process in in_process:
@@ -88,6 +89,7 @@ class Pipeline:
 
     def print_process(self):
         """
+        Documentation
         Print process that are in the pipeline. The order of printing is
         the same as the running order.
         """
@@ -98,8 +100,15 @@ class Pipeline:
         for process in self.post_process:
             print(process.process_desc)
 
-    def print_traceback(self, proc : MetaProcess, num: int,
+    def print_traceback(self, proc: MetaProcess, num: int,
                         e: Exception) -> None:
+        """Documentation
+        Print ???
+        Parameters:
+            proc:
+            num:
+            e:
+        """
         traceback.print_tb(e.__traceback__)
         print("Proprocess number " + str(num)
               + "( " + proc.process_desc
@@ -110,8 +119,9 @@ class Pipeline:
         print(exc_type, fname, exc_tb.tb_lineno)
         print(e)
 
-    def run_pipeline(self, nb_images: int, verbose=True, **kwargs) -> None:
+    def run_pipeline(self, nb_images: int, verbose: bool=True, **kwargs) -> None:
         """
+        Documentation
         Run the pipeline. Compute, in order :
             - preprocessing
             - processing
@@ -121,14 +131,14 @@ class Pipeline:
         Run the computations over 1 image at a time and are directly
         modified.
         The output are saved in the json class argument.
-        :param nb_images: int : number of images to compute the pipeline
-        on.
-        :param verbose : bool : set visualisation on or off. Image are
-        plot with matplotlib and process list are printed if
-        verbose = True.
-        :param **kwargs : allow argument passing by this dictionnary. It
-        is used to give parameters to process in the run. Don't forget
-        to name parameter the same as in the process definition.
+        Parameters:
+            nb_images: number of images to compute the pipeline on
+            param verbose : set visualisation on or off. Image are
+            plot with matplotlib and process list are printed if
+            verbose = True.
+            **kwargs : allow argument passing by this dictionnary. It
+            is used to give parameters to process in the run. Don't 
+            forget to name parameter the same as in the process definition.
         """
         if verbose is True :
             self.print_process()
