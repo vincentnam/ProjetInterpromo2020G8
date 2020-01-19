@@ -1,14 +1,16 @@
 # ProjetInterpromo2020G8
 Groupe 8 private repository : prediction cabines
+# Software architecture : 
+![alt text](./images/uml_diag.png)
 
-Look at "Exemple_notebook.ipynb" for exemple. 
+
+Look at "Exemple_notebook.ipynb" for a running exemple. 
 # How to make process : 
 How to run the solution (with minimum parameters):
  - pipeline = Pipeline(data_path)
  - pipeline.add_processes([list_of_processes])
 
 Pipeline out is a dictionary (in a json format) :
-
  - print(pipeline.json)
 
 Output format is :

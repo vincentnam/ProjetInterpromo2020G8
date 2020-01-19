@@ -10,6 +10,7 @@ import os
 
 
 class SegmentationZone(Process):
+
     """Documentation
     
     """
