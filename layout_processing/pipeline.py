@@ -20,8 +20,8 @@ class Pipeline:
     this list contain only 1 process.
     """
 
-    def __init__(self, data_path, list_images_name: iter[str] = None,
-                 layouts: iter[str] =
+    def __init__(self, data_path, list_images_name: Iterable[str] = None,
+                 layouts: Iterable[str]=
                  ['LAYOUT SEATGURU', 'LAYOUT SEATMAESTRO']) -> None:
         """
         Documentation

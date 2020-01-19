@@ -1,7 +1,7 @@
 from .metaprocess import MetaProcess, overrides
 from abc import abstractmethod
 from typing import Iterable
-
+from .colourtool import Colour
 
 class Preprocess(MetaProcess):
     """

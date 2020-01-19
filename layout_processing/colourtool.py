@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from .utiltool import ImageUtil
-
+from typing import Iterable
 
 # Global variable : colors dictionnary for layout : used by colors
 # preprocess - to determine wich colors has to be kept as element
@@ -44,7 +44,7 @@ class Colour:
     Tool class : used to make transformations over images
     """
 
-    def __init__(self, csv_data_path: str, layout: iter[str], image_name: str):
+    def __init__(self, csv_data_path: str, layout: Iterable[str], image_name: str):
         """
         Documentation
         Constructor for Colour class ; tool box for image preprocessing.

@@ -2,7 +2,7 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import cv2 as cv
 from PIL import Image
-
+from typing import Iterable
 
 class ImageUtil:
     """
