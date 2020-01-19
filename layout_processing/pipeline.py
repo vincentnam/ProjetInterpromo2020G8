@@ -21,7 +21,7 @@ class Pipeline:
     """
 
     def __init__(self, data_path, list_images_name: Iterable[str] = None,
-                 layouts: Iterable[str]=
+                 layouts: Iterable[str] =
                  ['LAYOUT SEATGURU', 'LAYOUT SEATMAESTRO']) -> None:
         """
         Documentation
@@ -119,7 +119,7 @@ class Pipeline:
         print(exc_type, fname, exc_tb.tb_lineno)
         print(e)
 
-    def run_pipeline(self, nb_images: int, verbose: bool=True, **kwargs) -> None:
+    def run_pipeline(self, nb_images: int, verbose: int = 1, **kwargs) -> None:
         """
         Documentation
         Run the pipeline. Compute, in order :
@@ -139,13 +139,22 @@ class Pipeline:
             **kwargs : allow argument passing by this dictionnary. It
             is used to give parameters to process in the run. Don't 
             forget to name parameter the same as in the process definition.
+            :param nb_images: int : number of images to process, if nb_images
+            < 0, the whole dataset is processed.
+            :param verbose: int :
+             if verbose = 0 : nothing is plot
+             if verbose = 1 : images are plot
+             if verbose > 2 : json are also plot (Warning : it can takes
+             a lot of place in standard output)
         """
-        if verbose is True :
+        if verbose is True:
             self.print_process()
         if self.list_images_name is None:
-            self.list_images_name = os.listdir(self.image_folder_path)[
-                                    :nb_images]
-
+            if nb_images > 0:
+                self.list_images_name = os.listdir(self.image_folder_path)[
+                                        :nb_images]
+            else:
+                self.list_images_name = os.listdir(self.image_folder_path)
         for image_name in self.list_images_name:
             # Create a Colour object containing the image to process.
             col_obj = Colour(self.layout_folder_path, self.layouts[0],
@@ -164,8 +173,8 @@ class Pipeline:
                     print("Doing : " + pre_pro.process_desc)
                     image = pre_pro.run(**kwargs)
                     col_obj.set_image(image)
-                    if verbose is True:
-                        plt.figure(figsize=(40, 40))
+                    if verbose > 1:
+                        plt.figure(figsize=(4, 4))
                         plt.imshow(col_obj.image)
                         plt.show()
                 except Exception as e:
@@ -180,7 +189,7 @@ class Pipeline:
                         pro.run(image, self.json, image_rgb=col_obj.image,
                                 data_image=self.image_folder_path + image_name,
                                 image_name=image_name, **kwargs)
-                        if verbose is True:
+                        if verbose > 2:
                             print(self.json)
                     else:
                         raise ValueError("Image = None")
