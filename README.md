@@ -1,5 +1,11 @@
 # ProjetInterpromo2020G8
 Groupe 8 private repository : prediction cabines
+# Environnement :
+This project is a python project made with Python >= 3.6. All libraries requirements are described in "requirements.txt".
+
+Install environnement with : pip install -r requirements.txt
+
+
 # Software architecture : 
 ![alt text](./images/uml_diag.png)
 
