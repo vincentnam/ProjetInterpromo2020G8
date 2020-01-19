@@ -116,8 +116,8 @@ class Colour:
                 then it will replace the colour by the one in the dict.
                 if false : it means that if we consider a colour from
                 the image close to a colour from the "colours" dict,
-                then it will replace the colour by the default color value.
-            default_color : default color value that a pixel has to take
+                then it will replace the colour by the default colour value.
+            default_colour : default color value that a pixel has to take
         """
         # make a copy to avoid to erase the original image
         img_copy = self.util_obj.to_rgb()
@@ -154,8 +154,8 @@ class Colour:
                             img_copy[i][j] = default_colour
         return img_copy
 
-    def colour_pipeline(self, colours: dict={}, epsilon: int=20, colour_mode=True,
-                        rgb_len=[0, 0, 0], default_color: int=3):
+    def colour_pipeline(self, colours: dict = {}, epsilon: int = 30, colour_mode=True,
+                        rgb_len: list = [0, 0, 0], default_colour: int = 3):
         """
         Documentation
         Call colour_detection function in order to pre-process
@@ -176,7 +176,7 @@ class Colour:
                 default one) : it means that if we consider a colour
                 from the image close to a colour from the "colours" dict,
                 then it will replace the colour by the default color value.
-            default_color : default color value that a pixel has to take
+            default_colour : default colour value that a pixel has to take
         Out:
             image_res:
         """

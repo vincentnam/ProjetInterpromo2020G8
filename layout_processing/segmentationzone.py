@@ -32,8 +32,8 @@ class SegmentationZone(Process):
         label_image = label(cleared)
         return label_image
 
-    def label_results(self, image: iter, json: dict, data_image: str=None,
-                      min_rectangle_area: int=80):
+    def zone_detection(self, image: iter, json: dict, data_image: str = None,
+                       min_rectangle_area: int = 20):
         """
         Documentation
         Retrieve information concerning an specific area
@@ -68,53 +68,6 @@ class SegmentationZone(Process):
                     region['EquivDiameter'])
                 json[data_image.split('/')[-1]]['coordinates'].append(
                     region['Coordinates'])
-
-    def image_detection_result(self, image_name: str, im_pre: iter, limit_area: int):
-        """
-        Documentation
-        Detect every rectangle in the image nearby specific elements
-        Parameters:
-            image_name : image chosen
-            im_pre: 
-            limit_area : minimum dimension area, 80 by default
-        Out :
-            A list of rectangles representing specific elements in the image
-        """
-
-        # the result will be store in this list
-        image_detection_result = []
-
-        # detect the regions of an image
-        label_image = self.image_process_label(im_pre)
-        props = regionprops(label_image)
-
-        # prepare the image info
-        image_detection_result.append({
-            'image_name': image_name,
-            "areas": [],
-            "rectangles": [],
-            "diameters": [],
-            "coordinates": []
-        })
-
-        # the last index in the list
-        len_list = len(image_detection_result) - 1
-
-        # by region find every rectangle that will interesting us
-        for region in props:
-
-            # bigger enough area chosen
-            if region.area >= limit_area:
-                image_detection_result[len_list]['areas'].append(
-                    region['Area'])
-                image_detection_result[len_list]['rectangles'].append(
-                    region['BoundingBox'])
-                image_detection_result[len_list]['diameters'].append(
-                    region['EquivDiameter'])
-                image_detection_result[len_list]['coordinates'].append(
-                    region['Coordinates'])
-
-        return image_detection_result
 
     def coord_template_matching_image_single(self, image: iter, json: dict, liste_temp: list,
                                              path_temp: str, image_name: str, threshold: float):
@@ -169,8 +122,8 @@ class SegmentationZone(Process):
 
         json[image_name] = temp_rcgnzd[image_name]
 
-    def run(self, image: iter, json: dict, image_rgb: iter=None, col_obj: str=None, 
-            templates: iter=None, data_image=None, image_name: str=None, **kwargs) -> None:
+    def run(self, image: iter, json: dict, image_rgb: iter = None, col_obj: str = None,
+            templates: iter = None, data_image: str = None, image_name: str = None, **kwargs) -> None:
         """
         Documentation
         Main of this class
@@ -187,7 +140,7 @@ class SegmentationZone(Process):
         """
         plt.imshow(image)
         plt.show()
-        self.label_results(image, json, data_image)
+        self.zone_detection(image, json, data_image)
         temp_zone_fold_path = "./images/zone_templates/"
         list_temp = [name_template for name_template in
                      os.listdir(temp_zone_fold_path) 
