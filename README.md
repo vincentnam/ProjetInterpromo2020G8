@@ -12,10 +12,11 @@ Pipeline out is a dictionary (in a json format) :
  - print(pipeline.json)
 
 Output format is :
- - Seat json output : { "image.png" : { "seat_type" : [ (x1,y1,h1,w1), (x2,y2,h2,w2),...] }
+ - Seat json output : { "image.png" : { "seat_type" : [ (x1,y1,h1,w1), (x2,y2,h2,w2),...] } 
  - Element json output : { "image.png" : { "element_type" : [(x1,y1,h1,w1), (x2,y2,h2,w2),...] } }
 
-This contains multiple image in same dictionnary.
+This contains multiple image in same dictionnary. 
+##### Each detection is defined by its up right left corner point coordinates, height and width in the document.. 
 
 Exemple_notebook.ipynb is an exemple the solution running over multiple images. Visualisation and statistics are plot in.
 
@@ -30,6 +31,7 @@ The new json format is : {"image.png" : {"type_seat" : { (x_seat,y_seat,h,w) : {
 }  }  }
 
 It contains for each image, for each seat, for each element the distance of the seat to the element.
+##### Each point is defined in this document by its centroid coordinates, height and width.
 #
 Documentaiton Deep Learning : https://docs.google.com/document/d/1Pht0gxAkobEJzD24B42Fu_TzKjeq6rgOsKi-l9-fEvM/edit?usp=sharing
 
