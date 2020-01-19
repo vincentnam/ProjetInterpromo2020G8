@@ -422,14 +422,14 @@ class SeatFinder(Process):
                 category=objet['Category'],
                 seat_type=objet['Seat_Type'],
                 image_name=image_name)
-            for templ in templates:
-                templateFind, find = self.template_from_template(image,
-                                                                 templ)
-                if find:
+            for template in templates:
+                templateFind, found = self.template_from_template(image,
+                                                                 template)
+                if found:
                     position = self.best_position(image, templateFind,
                                                   objet['Count'])
 
-                    h, w = templ.shape
+                    h, w = template.shape
                     for i in range(len(position)):
                         position[i] = position[i] + (h, w)
                     json[image_name][objet['Category']] += position
