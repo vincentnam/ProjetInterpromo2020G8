@@ -1,13 +1,12 @@
-import sklearn
 import numpy as np
 from matplotlib import patches
-
 from .astargraph import AStarGraph
 import matplotlib.pyplot as plt
 import cv2 as cv
 from gensim.parsing.preprocessing import strip_numeric, strip_non_alphanum
 import pandas as pd
 from sklearn.cluster import DBSCAN
+from .pipeline import Pipeline
 
 
 class DistPipeline:
@@ -16,7 +15,7 @@ class DistPipeline:
     To return a json calculating the distances between images and obstacles.
     """
 
-    def __init__(self, pipeline: pipeline, pipeline_zone: pipeline):
+    def __init__(self, pipeline: Pipeline, pipeline_zone: Pipeline):
         """
         Documentation
         DistPipeline class constructor.
@@ -92,7 +91,6 @@ class DistPipeline:
                     merge_dictio[k][merge_key] = list(
                         dict.fromkeys(merge_dictio[k][merge_key]))
         return merge_dictio
-
 
     def clusters_to_rect(self, dbscan,
                          array_wo_dup: np.array):
