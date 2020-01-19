@@ -398,12 +398,11 @@ class SeatFinder(Process):
         
         Parameters :
             image : image plane
-            json : json containing image information
+            json : in-out json containing image information
             image_name : image name
             layout : layout type
             path : path for template directory
-        Out :
-            dictionnary
+
         """
 
         if not image_name in json.keys():
