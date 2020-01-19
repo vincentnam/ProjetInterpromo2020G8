@@ -99,8 +99,8 @@ class Colour:
         self.image = image
         self.util_obj.set_image(image)
 
-    def colour_detection(self, colours: dict, epsilon: int, rgb_len: list, 
-                         colour_mode: bool, default_colour: int):
+    def colour_detection(self, colours: dict, epsilon: int, rgb_len: int,
+                         colour_mode: bool, default_colour: list):
         """
         Documentation
         This function will detect the colour and will do some pre-process
@@ -155,7 +155,7 @@ class Colour:
         return img_copy
 
     def colour_pipeline(self, colours: dict = {}, epsilon: int = 30, colour_mode=True,
-                        rgb_len: list = [0, 0, 0], default_colour: int = 3):
+                        rgb_len: int = 3, default_colour: list = [0, 0, 0]):
         """
         Documentation
         Call colour_detection function in order to pre-process
