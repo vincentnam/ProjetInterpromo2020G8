@@ -173,7 +173,7 @@ class Pipeline:
                     print("Doing : " + pre_pro.process_desc)
                     image = pre_pro.run(**kwargs)
                     col_obj.set_image(image)
-                    if verbose > 1:
+                    if verbose > 0:
                         plt.figure(figsize=(4, 4))
                         plt.imshow(col_obj.image)
                         plt.show()
@@ -189,7 +189,7 @@ class Pipeline:
                         pro.run(image, self.json, image_rgb=col_obj.image,
                                 data_image=self.image_folder_path + image_name,
                                 image_name=image_name, **kwargs)
-                        if verbose > 2:
+                        if verbose > 1:
                             print(self.json)
                     else:
                         raise ValueError("Image = None")
