@@ -20,7 +20,7 @@ class RemoveDoubleSeat(Postprocess):
         Parameters
             coordinate: original coordinates without treatment
         Out:
-            dup: list of coordinate which are duplicated
+            list of coordinate without duplicated elements
         """
         dup = {}
 

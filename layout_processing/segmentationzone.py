@@ -59,7 +59,7 @@ class SegmentationZone(Process):
 
         # by region find every rectangle that will interesting us
         for region in props:
-            # bigger enough area chosen
+            # only some region are chosen
             if region.area >= min_rectangle_area:
                 json[data_image.split('/')[-1]]['areas'].append(region['Area'])
                 json[data_image.split('/')[-1]]['rectangles'].append(
