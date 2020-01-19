@@ -159,7 +159,7 @@ class Pipeline:
             # Create a Colour object containing the image to process.
             col_obj = Colour(self.layout_folder_path, self.layouts[0],
                              image_name)
-            if verbose is True:
+            if verbose > 0 :
                 plt.figure(figsize=(4, 4))
                 plt.imshow(col_obj.image)
                 plt.show()
