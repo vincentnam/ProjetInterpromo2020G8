@@ -41,7 +41,7 @@ The new json format is : {"image.png" : {"type_seat" : { (x_seat,y_seat,h,w) : {
 It contains for each image, for each seat, for each element the distance of the seat to the element.
 ##### Each point is defined in this document by its centroid coordinates, height and width.
 
-# Possible improvement : 
+# Possible improvements : 
 We have choosen to work only on 1 type of layout : Layout from SeatGuru that are in .png format.
 
 To improve the solution, some things are possibles : 
