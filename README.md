@@ -40,12 +40,35 @@ The new json format is : {"image.png" : {"type_seat" : { (x_seat,y_seat,h,w) : {
 
 It contains for each image, for each seat, for each element the distance of the seat to the element.
 ##### Each point is defined in this document by its centroid coordinates, height and width.
+
+# Possible improvement : 
+We have choosen to work only on 1 type of layout : Layout from SeatGuru that are in .png format.
+
+To improve the solution, some things are possibles : 
+ - Adapt the pipeline to other format (image reading problem for some pattern due to OpenCV) : it is required to adapt colors and pattern to other layouts and for the SeatMaestro graphical chart (A part have been done during the project but not used)
+ - Pattern auto extraction from layouts : with pipeline for element detection, it is possible to extract some new pattern (i.e. elements zones, colored seats, etc...). The solution for an automatic labelisation can be done with CNN (Convolutionnal Neural Network) trained of a set of templates
+ - Fast / Faster-RCNN : Make detection of every elements (seats, toilets, galley, etc..) we want and getting the bounding box of each element in 1 step. (A dataset with seats and element position is available (scrap from SeatGuru) with SVG image to make training on it). As data are really clean and objet to detect are clearly defined, it could work well and could learn easily.
+ - Unet : neural network to make image segmentation recognizing seat and elements 
+
+Neural network in our context are pretty much one of the best solution to answer to the needs. But a lack of data made us impossible to use thoses algorithms in the time we had.
+
+
+
+
+
+
+
+
+
 #
-Documentaiton Deep Learning : https://docs.google.com/document/d/1Pht0gxAkobEJzD24B42Fu_TzKjeq6rgOsKi-l9-fEvM/edit?usp=sharing
 
 
-# ATTENTION : 
-## Chacun doit travailler sur sa propre branche. Pour se faire, il faut changer de branche et passer sur la branche qui correspond. Les branches sont nommés par prénom (ex : branche "Vincent-Nam"). Pour changer de branche il faut utiliser la commande "git checkout" suivi du nom de la branche (ex : git checkout Vincent-Nam)
+
+
+Documentation Deep Learning : https://docs.google.com/document/d/1Pht0gxAkobEJzD24B42Fu_TzKjeq6rgOsKi-l9-fEvM/edit?usp=sharing
+
+
+## Les branches sont nommés par prénom (ex : branche "Vincent-Nam"). Pour changer de branche il faut utiliser la commande "git checkout" suivi du nom de la branche (ex : git checkout Vincent-Nam)
 ##Pour visualiser la liste des branches : git branch -v 
 Lien du document drive décrivant un peu le projet : https://docs.google.com/document/d/1bfkXWvkYrwYwVtkSgcScX5hb6XGzKLVn_2sqA2HXyDo/edit?usp=sharing
 # Légende des plans : 

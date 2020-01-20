@@ -174,7 +174,7 @@ class Pipeline:
                     image = pre_pro.run(**kwargs)
                     col_obj.set_image(image)
                     if verbose > 0:
-                        plt.figure(figsize=(4, 4))
+                        plt.figure(figsize=(20, 40))
                         plt.imshow(col_obj.image)
                         plt.show()
                 except Exception as e:
